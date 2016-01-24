@@ -1,11 +1,14 @@
-use options::Options;
+extern crate winapi;
+extern crate kernel32;
+extern crate user32;
+
+// use options::Options;
+use window::open_window;
 
 mod options;
+mod window;
 
 fn main() {
-    let options = Options::new();
-    let windowed = options.is_set("-windowed");
-    let alpha = options.check_param::<u32>("-alpha");
-    
-    println!("{}, {:?}", windowed, alpha);
+    let window = open_window::<window::win32::WinApiWindow>(800, 600);
+    loop {}
 }

@@ -19,13 +19,13 @@ impl Options {
         Options { args: args }
     }
     
-    /// Return the parameter of the given argument. Returns None if the parameter 
+    /// Return the parameter of the given argument. Returns None if the argument 
     /// is either not found, couldn't be parsed to the desired type or the next 
     /// argument is itself a commandline option (starts with '-').
-    pub fn check_param<T>(&self, param: &str) -> Option<T> where T: FromStr {  
-        // Find the index of the parameter in the argument list
-        self.args.iter().position(|s| s == param).and_then(|idx| {
-            // Get the value occurring after that index
+    pub fn check_param<T>(&self, argument: &str) -> Option<T> where T: FromStr {  
+        // Find the index of the argument in the argument list
+        self.args.iter().position(|s| s == argument).and_then(|idx| {
+            // Get the value occurring after that index 
             self.args.get(idx + 1).and_then(|arg| {
                 // Don't return other commandline options
                 if arg.starts_with("-") {
