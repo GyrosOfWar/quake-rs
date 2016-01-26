@@ -1,26 +1,47 @@
 // Export the right window implementation based on which OS we're running.
-#[cfg(target_os="windows")] pub use self::win32::Window;
-#[cfg(any(target_os="unix", target_os="linux"))] pub use self::nix::Window;
+#[cfg(target_os="windows")] pub use self::win32::Win32Window as Window;
+#[cfg(any(target_os="unix", target_os="linux"))] pub use self::nix::X11Window as Window;
+
+pub enum Event {
+    // TODO
+    Nothing,
+}
+
+pub trait WindowTrait {
+    /// Creates the Window object and opens it with the specified size.
+    fn open(x_size: i32, y_size: i32) -> Self;
+    /// Clears the window, painting it black. (No colors anymore, I want them to turn black)
+    fn clear(&mut self);
+    /// Returns an event, if one is available.
+    fn poll_event(&self) -> Option<Event>;
+}
 
 #[cfg(any(target_os="unix", target_os="linux"))] 
 mod nix {
-    // TODO implement X11 window or something of the sort
-    pub struct Window;
+    use super::{WindowTrait, Event};
     
-    impl Window {
-        pub fn open(x_size: i32, y_size: i32) -> Window {
-            println!("Unix says hi!");
-            Window
+    // TODO implement X11 window or something of the sort
+    pub struct X11Window;
+    
+    impl WindowTrait for X11Window {
+        fn open(x_size: i32, y_size: i32) -> X11Window {
+            unimplemented!()
         }
         
-        pub fn clear(&mut self) {
-            println!("Clearing window!");
+        fn clear(&mut self) {
+            unimplemented!()
+        }
+        
+        fn poll_event(&self) -> Option<Event> {
+            unimplemented!()
         }
     }
 }
 
 #[cfg(target_os="windows")]
 mod win32 {
+    use super::{WindowTrait, Event};
+    
     const WIN_CLASS_NAME: &'static str = "rsquake-window";
     use std::ffi::OsStr;
     use std::os::windows::ffi::OsStrExt;
@@ -88,7 +109,7 @@ mod win32 {
     }
     
     #[derive(Debug)]
-    pub struct Window {
+    pub struct Win32Window {
         window: HWND,
         x_size: i32,
         y_size: i32
@@ -98,23 +119,43 @@ mod win32 {
         DefWindowProcW(hwnd, uint, wparam, lparam)
     }
     
-    impl Window {
-        /// Creates the window object and opens the window with the specified size.
-        pub fn open(x_size: i32, y_size: i32) -> Window {
+    fn translate_message(msg: MSG) -> Event {
+        // TODO
+        Event::Nothing
+    }
+    
+    impl WindowTrait for Win32Window {
+        fn open(x_size: i32, y_size: i32) -> Win32Window {
             let window = unsafe { create_window(Some(wnd_callback), x_size, y_size) };
-            Window {
+            Win32Window {
                 window: window,
                 x_size: x_size,
                 y_size: y_size
             }
         }
-        
-        /// Clears the window, painting it black. (No colors anymore, I want them to turn black)
-        pub fn clear(&mut self) {
+       
+        fn clear(&mut self) {
             unsafe {
                 let dc = GetDC(self.window);
                 PatBlt(dc, 0, 0, self.x_size, self.y_size, BLACKNESS);
                 ReleaseDC(self.window, dc);
+            }
+        }
+        
+        fn poll_event(&self) -> Option<Event> {
+            let mut msg = MSG {
+                hwnd: ptr::null_mut(),
+                message: 0,
+                wParam: 0,
+                lParam: 0,
+                time: 0,
+                pt: POINT { x: 0, y: 0}
+            };
+            let result = unsafe { PeekMessageW(&mut msg, ptr::null_mut(), 0, 0, PM_REMOVE) };
+            if result == 0 {
+                Some(translate_message(msg))
+            } else {
+                None
             }
         }
     }
