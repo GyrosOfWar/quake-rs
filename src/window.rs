@@ -2,10 +2,31 @@
 #[cfg(target_os="windows")] pub use self::win32::Win32Window as Window;
 #[cfg(any(target_os="unix", target_os="linux"))] pub use self::nix::X11Window as Window;
 
+#[derive(Debug, PartialEq, Eq)]
 pub enum Event {
     // TODO
     Nothing,
+    WindowClosed
 }
+
+pub struct EventIter<'a> {
+    window: &'a Window
+}
+
+impl<'a> Iterator for EventIter<'a> {
+    type Item = Event;
+    
+    fn next(&mut self) -> Option<Event> {
+        match self.window.poll_event() {
+            Some(ev) => if ev == Event::WindowClosed {
+                None
+            } else {
+                Some(ev)
+            },
+            None => Some(Event::Nothing)
+        }
+    }
+} 
 
 pub trait WindowTrait {
     /// Creates the Window object and opens it with the specified size.
@@ -14,6 +35,10 @@ pub trait WindowTrait {
     fn clear(&mut self);
     /// Returns an event, if one is available.
     fn poll_event(&self) -> Option<Event>;
+    // TODO it should be no problem to implement this in terms of 
+    // poll_event but I haven't figured out how to just yet
+    /// Returns an iterator over the events for the window.
+    fn events<'a>(&'a self) -> EventIter<'a>;
 }
 
 #[cfg(any(target_os="unix", target_os="linux"))] 
@@ -35,12 +60,14 @@ mod nix {
         fn poll_event(&self) -> Option<Event> {
             unimplemented!()
         }
+        
+        fn events<'a>(&'a self) -> EventIter<'a> { unimplemented!() }
     }
 }
 
 #[cfg(target_os="windows")]
 mod win32 {
-    use super::{WindowTrait, Event};
+    use super::{WindowTrait, Event, EventIter};
     
     const WIN_CLASS_NAME: &'static str = "rsquake-window";
     use std::ffi::OsStr;
@@ -121,7 +148,10 @@ mod win32 {
     
     fn translate_message(msg: MSG) -> Event {
         // TODO
-        Event::Nothing
+        match msg.message {
+            WM_CLOSE => Event::WindowClosed,
+            _ => Event::Nothing
+        }
     }
     
     impl WindowTrait for Win32Window {
@@ -152,11 +182,20 @@ mod win32 {
                 pt: POINT { x: 0, y: 0}
             };
             let result = unsafe { PeekMessageW(&mut msg, ptr::null_mut(), 0, 0, PM_REMOVE) };
-            if result == 0 {
+            
+            if result != 0 {
+                unsafe {
+                    TranslateMessage(&mut msg);
+                    DispatchMessageW(&mut msg);
+                }
                 Some(translate_message(msg))
             } else {
                 None
             }
+        }
+        
+        fn events<'a>(&'a self) -> EventIter<'a> {
+            EventIter { window: self }
         }
     }
 }
