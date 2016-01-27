@@ -253,7 +253,7 @@ mod win32 {
                     *cell.borrow_mut() = Some(context);
                 });
 
-                tx.send(w);
+                tx.send(w).unwrap();
                 let mut msg = unsafe { mem::uninitialized() };
                 loop {
                     unsafe {

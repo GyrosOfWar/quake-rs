@@ -1,5 +1,3 @@
-#![feature(log_syntax)]
-
 extern crate winapi;
 extern crate kernel32;
 extern crate user32;
@@ -9,7 +7,7 @@ use window::{Window, WindowTrait};
 use event::*;
 use timer::Timer;
 use std::time::Duration;
-use std::thread;
+use std::{thread, time};
 
 mod options;
 mod window;
@@ -17,20 +15,20 @@ mod event;
 mod timer;
 
 fn main() {
-    let mut window = Window::open(800, 600);
+    let window = Window::open(800, 600);
     let mut timer = Timer::new();
+    let second = time::Duration::from_secs(1);
     'main: loop {
         for event in window.events() {
             match event {
                 Event::Closed => break 'main,
-                Event::KeyboardInput(code, KeyboardEvent::Pressed) => {
-                    println!("Key pressed: {:?}", code);
-                }
                 _ => {}
             }
-            
-            timer.tock();
-            timer.tick();
-        }   
+        }
+        thread::sleep(second);
+        
+        timer.tock();
+        println!("Elapsed: {}", timer.elapsed_seconds());
+        timer.tick();
     }
 }

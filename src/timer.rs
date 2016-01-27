@@ -1,14 +1,13 @@
+#[allow(dead_code)]
 #[cfg(target_os="windows")] pub use self::win32::Timer;
 
 #[cfg(target_os="windows")]
 mod win32 {
-    use winapi::*;
     use kernel32::*;
     
     pub struct Timer {
         tick: i64,
         tock: i64,
-        resolution: i64,
         seconds_per_tick: f64
     }
     
@@ -24,7 +23,6 @@ mod win32 {
             }
             
             Timer {
-                resolution: resolution,
                 seconds_per_tick: 1.0 / resolution as f64,
                 tick: tick,
                 tock: 0
