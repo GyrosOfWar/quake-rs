@@ -1,3 +1,7 @@
+// Most of this code is taken 1 to 1 from
+// the directx crate by Eljay, see here for the source>
+// https://github.com/Eljay/directx
+
 // #[cfg(target_os="windows")] pub use self::win32::KeyCode;
 use winapi::*;
 

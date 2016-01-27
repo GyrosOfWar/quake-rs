@@ -63,12 +63,12 @@ mod nix {
     }
 }
 
+// Windows implementation of a window
 #[cfg(target_os="windows")]
 mod win32 {
     use event::*;
     use super::{WindowTrait, EventIter};
 
-    const WIN_CLASS_NAME: &'static str = "rsquake-window";
     use std::ffi::OsStr;
     use std::os::windows::ffi::OsStrExt;
     use std::cell::RefCell;
@@ -81,10 +81,14 @@ mod win32 {
     use user32::*;
     use gdi32::*;
 
+    // Window title
+    const WIN_CLASS_NAME: &'static str = "rsquake";
+
     thread_local! {
         pub static CONTEXT: RefCell<Option<WindowContext>> = RefCell::new(None)
     }
 
+    /// Contains a handle to the window and a channel to send events to the window. 
     pub struct WindowContext {
         hwnd: HWND,
         send: Sender<Event>
@@ -95,6 +99,8 @@ mod win32 {
         OsStr::new(string).encode_wide().collect()
     }
 
+    /// Since we're not using WinMain, this is the way to get the hInstance of the currently
+    /// running process. 
     unsafe fn get_instance() -> HINSTANCE {
         let instance = GetModuleHandleW(ptr::null());
         if instance.is_null() {
@@ -104,7 +110,7 @@ mod win32 {
         instance
     }
 
-    // This function does all the nasty Win32 API business to open a window.
+    /// This function does the nasty Win32 API business to open a window.
     unsafe fn create_window(wnd_proc: WNDPROC, width: i32, height: i32) -> HWND {
         let instance = get_instance();
         let cursor = LoadCursorW(ptr::null_mut(), IDC_ARROW);
@@ -153,8 +159,18 @@ mod win32 {
         recv: Receiver<Event>
     }
 
+    // This tells the Rust compiler that it's OK to send the Window 
+    // to a different thread. Needs to be explicitly implemented, 
+    // because raw pointers aren't Send per default (HWND is just a 
+    // raw pointer)
     unsafe impl Send for Win32Window {}
 
+    // The idea and implementation for passing events to the Window from the WNDPROC is
+    // from the directx crate by Eljay, see here: https://github.com/Eljay/directx
+    
+    /// The WNDPROC callback. This is where programs will usually react to events by modifiying
+    /// some global state. This implementation maps Windows messages to our own Event enum, which 
+    /// then gets sent to the currently open Window. 
     unsafe extern "system" fn wnd_callback(hwnd: HWND, message: UINT, wparam: WPARAM, lparam: LPARAM) -> LRESULT {
         fn send_event(event: Event) -> LRESULT {
             CONTEXT.with(|cell| {
@@ -191,7 +207,7 @@ mod win32 {
                 _ => wparam as i32
             }
         }
-            
+        // Maps the interesting window messages to different Event variants. 
         match message {
             WM_ACTIVATE => send_event(Event::Focused(wparam != 0)),
             WM_DESTROY => send_event(Event::Closed),
@@ -233,10 +249,13 @@ mod win32 {
 
     impl WindowTrait for Win32Window {
         fn open(x_size: i32, y_size: i32) -> Win32Window {
+            // A channel to send the Window from the thread that opened it, 
+            // so we can return it. 
             let (tx, rx) = channel();
             thread::spawn(move || {
                 let window = unsafe { create_window(Some(wnd_callback), x_size, y_size) };
                 unsafe { ShowWindow(window, SW_SHOWDEFAULT); }
+                // Channel to communicate between the WNDPROC and the Window 
                 let (wnd_tx, wnd_rx) = channel();
                 let context = WindowContext {
                     hwnd: window,
@@ -249,12 +268,15 @@ mod win32 {
                     y_size: y_size,
                     recv: wnd_rx
                 };
+                
+                // Set the context
                 CONTEXT.with(|cell| {
                     *cell.borrow_mut() = Some(context);
                 });
-
+                // Send the window back to the main thread 
                 tx.send(w).unwrap();
                 let mut msg = unsafe { mem::uninitialized() };
+                // Star the message loop in this thread
                 loop {
                     unsafe {
                         while PeekMessageW(&mut msg, ptr::null_mut(), 0, 0, PM_REMOVE) > 0 {

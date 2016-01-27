@@ -5,6 +5,12 @@
 mod win32 {
     use kernel32::*;
     
+    fn get_perf_counter() -> i64 {
+        let mut t = 0;
+        unsafe { QueryPerformanceCounter(&mut t); }
+        t
+    }
+        
     pub struct Timer {
         tick: i64,
         tock: i64,
@@ -14,27 +20,23 @@ mod win32 {
     impl Timer {
         pub fn new() -> Timer {
             let mut resolution = 0;
-            let mut tick = 0;
-            let mut tock = 0;
             unsafe {
                 QueryPerformanceFrequency(&mut resolution);
-                QueryPerformanceCounter(&mut tick);
-                QueryPerformanceCounter(&mut tock);
             }
             
             Timer {
                 seconds_per_tick: 1.0 / resolution as f64,
-                tick: tick,
+                tick: get_perf_counter(),
                 tock: 0
             }
         }
         
         pub fn tick(&mut self) {
-            unsafe { QueryPerformanceCounter(&mut self.tick); }
+            self.tick = get_perf_counter()
         }
         
         pub fn tock(&mut self) {
-            unsafe { QueryPerformanceCounter(&mut self.tock); }
+            self.tock = get_perf_counter()
         }
         
         pub fn elapsed_seconds(&self) -> f64 {
