@@ -16,19 +16,9 @@ fn main() {
     let mut window = Window::open(800, 600);
     let mut timer = Timer::new();
     let one_sec = Duration::from_millis(1000);
-    
     for event in window.events() {
-        println!("{:?}", event);
-        match event {
-            Event::WindowClosed => {
-                println!("Window closed!");
-                break;
-            },
-            _ => {}
+        if event != Event::Nothing {
+            println!("{:?}", event);
         }
-
-        
-        timer.tock();
-        timer.tick();
     }
 }
