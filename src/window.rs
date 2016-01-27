@@ -2,12 +2,7 @@
 #[cfg(target_os="windows")] pub use self::win32::Win32Window as Window;
 #[cfg(any(target_os="unix", target_os="linux"))] pub use self::nix::X11Window as Window;
 
-#[derive(Debug, PartialEq, Eq)]
-pub enum Event {
-    // TODO
-    Nothing,
-    WindowClosed
-}
+use event::Event;
 
 pub struct EventIter<'a> {
     window: &'a Window
@@ -17,14 +12,16 @@ impl<'a> Iterator for EventIter<'a> {
     type Item = Event;
 
     fn next(&mut self) -> Option<Event> {
-        match self.window.poll_event() {
-            Some(ev) => if ev == Event::WindowClosed {
-                None
-            } else {
-                Some(ev)
-            },
-            None => Some(Event::Nothing)
-        }
+        self.window.poll_event()
+        
+        // match self.window.poll_event() {
+        //     Some(ev) => if ev == Event::WindowClosed {
+        //         None
+        //     } else {
+        //         Some(ev)
+        //     },
+        //     None => Some(Event::Nothing)
+        // }
     }
 }
 
@@ -43,7 +40,8 @@ pub trait WindowTrait {
 
 #[cfg(any(target_os="unix", target_os="linux"))]
 mod nix {
-    use super::{WindowTrait, Event};
+    use event::Event;
+    use super::WindowTrait;
 
     // TODO implement X11 window or something of the sort
     pub struct X11Window;
@@ -67,7 +65,8 @@ mod nix {
 
 #[cfg(target_os="windows")]
 mod win32 {
-    use super::{WindowTrait, Event, EventIter};
+    use event::*;
+    use super::{WindowTrait, EventIter};
 
     const WIN_CLASS_NAME: &'static str = "rsquake-window";
     use std::ffi::OsStr;
@@ -157,27 +156,79 @@ mod win32 {
     unsafe impl Send for Win32Window {}
 
     unsafe extern "system" fn wnd_callback(hwnd: HWND, message: UINT, wparam: WPARAM, lparam: LPARAM) -> LRESULT {
-        fn send_event(event: Event) {
+        fn send_event(event: Event) -> LRESULT {
             CONTEXT.with(|cell| {
                 if let Some(ref ctx) = *cell.borrow() {
                     ctx.send.send(event).ok();
                 }
-            })
+            });
+            0
         }
-
-        let event = translate_message(message);
-        send_event(event);
-
-        DefWindowProcW(hwnd, message, wparam, lparam)
-    }
-
-    fn translate_message(msg: u32) -> Event {
-        // TODO
-        println!("msg = {}", msg);
-        match msg {
-            WM_CLOSE => Event::WindowClosed,
-            _ => Event::Nothing
+        
+        fn send_mouse_event(event: MouseEvent, lparam: LPARAM) -> LRESULT {
+            send_event(Event::MouseInput(
+                event,
+                lparam as i16,
+                (lparam >> 16) as i16
+            ))
         }
+        
+        // Map windows virtual key to left/right versions
+        fn map_keycode(wparam: WPARAM, lparam: LPARAM) -> i32 {
+            let scancode = ((lparam & 0x00ff0000) >> 16) as u32;
+            let extended = (lparam & 0x01000000) != 0;
+
+            match wparam as i32 {
+                VK_SHIFT => unsafe {
+                    MapVirtualKeyW(scancode, MAPVK_VSC_TO_VK_EX) as i32
+                },
+                VK_CONTROL => {
+                    if extended { VK_RCONTROL } else { VK_LCONTROL }
+                },
+                VK_MENU => {
+                    if extended { VK_RMENU } else { VK_LMENU }
+                },
+                _ => wparam as i32
+            }
+        }
+            
+        match message {
+            WM_ACTIVATE => send_event(Event::Focused(wparam != 0)),
+            WM_DESTROY => send_event(Event::Closed),
+            WM_SIZE => send_event(Event::Resized(
+                lparam as u16,
+                (lparam >> 16) as u16
+            )),
+            WM_MOVE => send_event(Event::Moved(
+                lparam as i16,
+                (lparam >> 16) as i16
+            )),
+            WM_KEYDOWN => send_event(Event::KeyboardInput(
+                KeyCode::from_virtual_key(map_keycode(wparam, lparam)),
+                if (lparam & (1 << 30)) == 0 {
+                    KeyboardEvent::Pressed
+                } else {
+                    KeyboardEvent::Repeated
+                }
+            )),
+            WM_KEYUP => send_event(Event::KeyboardInput(
+                KeyCode::from_virtual_key(map_keycode(wparam, lparam)),
+                KeyboardEvent::Released
+            )),
+
+            // Mouse events
+            WM_MOUSEMOVE => send_mouse_event(MouseEvent::Move, lparam),
+            WM_LBUTTONDOWN => send_mouse_event(MouseEvent::LeftButtonDown, lparam),
+            WM_LBUTTONUP => send_mouse_event(MouseEvent::LeftButtonUp, lparam),
+            WM_RBUTTONDOWN => send_mouse_event(MouseEvent::RightButtonDown, lparam),
+            WM_RBUTTONUP => send_mouse_event(MouseEvent::RightButtonUp, lparam),
+            WM_MBUTTONDOWN => send_mouse_event(MouseEvent::MiddleButtonDown, lparam),
+            WM_MBUTTONUP => send_mouse_event(MouseEvent::MiddleButtonUp, lparam),
+
+            _ => DefWindowProcW(hwnd, message, wparam, lparam)       
+        }
+        
+
     }
 
     impl WindowTrait for Win32Window {
@@ -206,8 +257,7 @@ mod win32 {
                 let mut msg = unsafe { mem::uninitialized() };
                 loop {
                     unsafe {
-                        while PeekMessageW(&mut msg, ptr::null_mut(), 0, 0,
-                                           PM_REMOVE) > 0 {
+                        while PeekMessageW(&mut msg, ptr::null_mut(), 0, 0, PM_REMOVE) > 0 {
                             TranslateMessage(&msg);
                             DispatchMessageW(&msg);
                         }
@@ -227,14 +277,17 @@ mod win32 {
         }
 
         fn poll_event(&self) -> Option<Event> {
-            match self.recv.recv().ok() {
-                Some(ev) => Some(ev),
-                None => Some(Event::Nothing)
-            }
+            self.recv.try_recv().ok()
         }
 
         fn events<'a>(&'a self) -> EventIter<'a> {
             EventIter { window: self }
+        }
+    }
+    
+    impl Drop for Win32Window {
+        fn drop(&mut self) {
+            unsafe { DestroyWindow(self.window); }
         }
     }
 }
