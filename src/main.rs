@@ -15,7 +15,7 @@ mod event;
 mod timer;
 
 fn main() {
-    let window = Window::open(800, 600);
+    let mut window = Window::open(800, 600);
     let mut timer = Timer::new();
     let second = time::Duration::from_secs(1);
     'main: loop {
@@ -25,10 +25,9 @@ fn main() {
                 _ => {}
             }
         }
-        thread::sleep(second);
+        window.clear();
         
         timer.tock();
-        println!("Elapsed: {}", timer.elapsed_seconds());
         timer.tick();
     }
 }

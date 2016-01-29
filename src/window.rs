@@ -5,7 +5,7 @@
 use event::Event;
 
 pub struct EventIter<'a> {
-    window: &'a Window
+    window: &'a mut Window
 }
 
 impl<'a> Iterator for EventIter<'a> {
@@ -13,15 +13,6 @@ impl<'a> Iterator for EventIter<'a> {
 
     fn next(&mut self) -> Option<Event> {
         self.window.poll_event()
-        
-        // match self.window.poll_event() {
-        //     Some(ev) => if ev == Event::WindowClosed {
-        //         None
-        //     } else {
-        //         Some(ev)
-        //     },
-        //     None => Some(Event::Nothing)
-        // }
     }
 }
 
@@ -31,11 +22,11 @@ pub trait WindowTrait {
     /// Clears the window, painting it black. (No colors anymore, I want them to turn black)
     fn clear(&mut self);
     /// Returns an event, if one is available.
-    fn poll_event(&self) -> Option<Event>;
+    fn poll_event(&mut self) -> Option<Event>;
     // TODO it should be no problem to implement this in terms of
     // poll_event but I haven't figured out how to just yet
     /// Returns an iterator over the events for the window.
-    fn events<'a>(&'a self) -> EventIter<'a>;
+    fn events(&mut self) -> EventIter;
 }
 
 #[cfg(any(target_os="unix", target_os="linux"))]
@@ -55,11 +46,11 @@ mod nix {
             unimplemented!()
         }
 
-        fn poll_event(&self) -> Option<Event> {
+        fn poll_event(&mut self) -> Option<Event> {
             unimplemented!()
         }
 
-        fn events<'a>(&'a self) -> EventIter<'a> { unimplemented!() }
+        fn events(&mut self) -> EventIter { unimplemented!() }
     }
 }
 
@@ -298,11 +289,20 @@ mod win32 {
             }
         }
 
-        fn poll_event(&self) -> Option<Event> {
-            self.recv.try_recv().ok()
+        fn poll_event(&mut self) -> Option<Event> {
+            match self.recv.try_recv().ok() {
+                Some(ev) => {
+                    if let Event::Resized(x, y) = ev {
+                        self.x_size = x as i32;
+                        self.y_size = y as i32;
+                    }
+                    Some(ev)
+                },
+                None => None
+            }
         }
 
-        fn events<'a>(&'a self) -> EventIter<'a> {
+        fn events(&mut self) -> EventIter {
             EventIter { window: self }
         }
     }
