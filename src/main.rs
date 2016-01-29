@@ -1,3 +1,7 @@
+#![allow(dead_code)]
+#![cfg_attr(feature="nightly", feature(plugin))]
+#![cfg_attr(feature="nightly", plugin(clippy))]
+
 extern crate winapi;
 extern crate kernel32;
 extern crate user32;
@@ -6,18 +10,19 @@ extern crate gdi32;
 use window::{Window, WindowTrait};
 use event::*;
 use timer::Timer;
-use std::time::Duration;
 use std::{thread, time};
+use util::DurationExt;
 
 mod options;
 mod window;
 mod event;
 mod timer;
+mod util;
 
 fn main() {
     let mut window = Window::open(800, 600);
     let mut timer = Timer::new();
-    let second = time::Duration::from_secs(1);
+    let second = time::Duration::from_millis(150);
     'main: loop {
         for event in window.events() {
             match event {
@@ -26,8 +31,8 @@ fn main() {
             }
         }
         window.clear();
-        
-        timer.tock();
-        timer.tick();
+        thread::sleep(second);
+        let t = timer.get_time();
+        println!("{:?}", t.millis());
     }
 }

@@ -125,22 +125,20 @@ mod win32 {
             panic!("RegisterClassW error: {}", GetLastError());
         }
 
-        let main_window: HWND = CreateWindowExW(
+        CreateWindowExW(
             0,
             class_name,
             class_name,
             style,
-            200,
-            200,
+            CW_USEDEFAULT,
+            CW_USEDEFAULT,
             width,
             height,
             ptr::null_mut(),
             ptr::null_mut(),
             instance,
             ptr::null_mut()
-        );
-
-        main_window
+        )
     }
 
     pub struct Win32Window {

@@ -50,7 +50,9 @@ impl Options {
     }
 }
 
+#[cfg(test)]
 mod tests {
+    use super::Options;
     #[test]
     fn test_parse_args() {
         let options = Options::with_args(vec!["-windowed".into(), "-alpha".into(), "50".into()]);
