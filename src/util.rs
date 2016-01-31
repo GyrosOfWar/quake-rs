@@ -10,7 +10,8 @@ pub trait DurationExt {
     /// the nano-second precision. 
     fn millis(&self) -> f64;
     
-    /// Creates a time from nanoseconds
+    /// Creates a time from nanoseconds. (since the Duration::new function only
+    // takes nanoseconds as a u32, which can easily overflow)
     fn from_nanos(nanos: u64) -> Duration;
 }
 
@@ -34,6 +35,43 @@ impl DurationExt for Duration {
         } else {
             Duration::new(0, nanos as u32)
         }
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use std::time::Duration;
+    use super::DurationExt;
+    
+    #[test]
+    fn test_from_nanos() {
+        // 120 seconds
+        let nanos: u64 = 1_000_000_000 * 120;
+        let duration = Duration::from_nanos(nanos);
+        assert_eq!(duration.as_secs(), 120);
+        assert_eq!(duration.subsec_nanos(), 0);
+    }
+    
+    #[test]
+    fn test_from_nanos_2() {
+        let nanos: u64 = 3_000_000_000 + 64;
+        let duration = Duration::from_nanos(nanos);
         
+        assert_eq!(duration.as_secs(), 3);
+        assert_eq!(duration.subsec_nanos(), 64);
+    }
+    
+    #[test]
+    fn test_to_seconds() {
+        let duration = Duration::new(3, 500_000_000);
+        let secs = duration.seconds();
+        assert_eq!(secs, 3.5);
+    }
+    
+    #[test]
+    fn test_to_millis() {
+        let duration = Duration::new(0, 500_000_000);
+        let millis = duration.millis();
+        assert_eq!(millis, 500.0);
     }
 }

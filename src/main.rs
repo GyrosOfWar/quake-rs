@@ -22,7 +22,7 @@ mod util;
 fn main() {
     let mut window = Window::open(800, 600);
     let mut timer = Timer::new();
-    let second = time::Duration::from_millis(150);
+    let t_wait = time::Duration::from_millis(150);
     'main: loop {
         for event in window.events() {
             match event {
@@ -31,7 +31,7 @@ fn main() {
             }
         }
         window.clear();
-        thread::sleep(second);
+        thread::sleep(t_wait);
         let t = timer.get_time();
         println!("{:?}", t.millis());
     }
