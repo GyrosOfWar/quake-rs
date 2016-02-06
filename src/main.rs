@@ -7,32 +7,18 @@ extern crate kernel32;
 extern crate user32;
 extern crate gdi32;
 
-use window::{Window, WindowTrait};
-use event::*;
-use timer::Timer;
-use std::{thread, time};
-use util::DurationExt;
+use host::Host;
+use options::Options;
 
 mod options;
 mod window;
 mod event;
 mod timer;
 mod util;
+mod host;
 
 fn main() {
-    let mut window = Window::open(800, 600);
-    let mut timer = Timer::new();
-    let t_wait = time::Duration::from_millis(150);
-    'main: loop {
-        for event in window.events() {
-            match event {
-                Event::Closed => break 'main,
-                _ => {}
-            }
-        }
-        window.clear();
-        thread::sleep(t_wait);
-        let t = timer.get_time();
-        println!("{:?}", t.millis());
-    }
+    let options = Options::new();
+    let mut host = Host::new(800, 600);
+    host.run();
 }

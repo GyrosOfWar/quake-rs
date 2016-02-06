@@ -1,33 +1,44 @@
 #[cfg(target_os="windows")] use self::win32::*;
 #[cfg(any(target_os="unix", target_os="linux"))] use self::nix::*;
-use std::time::Duration;
-use util::DurationExt;
 
 pub struct Timer {
-    total_time_passed: i64,
-    nanos_per_tick: f64
+    last_tick: i64,
+    seconds_per_tick: f64,
+    total_time: f64,
+    max_frame_time: f64,
+    last_interval: f64
 }
 
 impl Timer {
-    pub fn new() -> Timer {
+    pub fn new(max_framerate: i32) -> Timer {
         let res = get_timer_resolution() as f64;
-        let nanos_per_tick = 1e9/res;
+        let spt = 1.0 / res;
+        let max_frame_time = 1.0 / max_framerate as f64;
         Timer {
-            total_time_passed: get_perf_counter(),
-            nanos_per_tick: nanos_per_tick
+            last_tick: get_perf_counter(),
+            seconds_per_tick: spt,
+            total_time: 0.0,
+            max_frame_time: max_frame_time,
+            last_interval: 0.0
         }
     }
     
-    /// Returns the time since the last time get_time was called and 
-    /// sets the internal time of the timer to the current time.
-    pub fn get_time(&mut self) -> Duration {
+    pub fn filter_time(&mut self) -> bool {
         let now = get_perf_counter();
-        let interval = now - self.total_time_passed;
-        self.total_time_passed = now;
-        
-        let nanos: f64 = interval as f64 * self.nanos_per_tick;
-        Duration::from_nanos(nanos as u64)
+        let interval_seconds = (now - self.last_tick) as f64 * self.seconds_per_tick;
+        self.total_time += interval_seconds;
+        if interval_seconds > self.max_frame_time {
+            self.last_tick = now;
+            self.last_interval = interval_seconds;
+            true
+        } else {
+            false
+        }
     }
+    
+    pub fn total_seconds(&self) -> f64 { self.total_time }
+    
+    pub fn last_interval(&self) -> f64 { self.last_interval }
 }
 
 #[cfg(target_os="windows")]
@@ -65,23 +76,12 @@ mod tests {
     use std::time::Duration;
     
     #[test]
-    fn long_timer() {
-        let mut timer = Timer::new();
-        timer.get_time();
-        thread::sleep(Duration::from_secs(2));
-        let t = timer.get_time();
-        let seconds = t.as_secs();
-        assert!(seconds >= 2);
+    fn test_tick() {
+        let mut timer = Timer::new(2);
+        thread::sleep(Duration::from_millis(480));
+        assert_eq!(timer.filter_time(), false);
+        thread::sleep(Duration::from_millis(30));
+        assert_eq!(timer.filter_time(), true);
     }
-    
-    #[test]
-    fn short_timer() {
-        let mut timer = Timer::new();
-        thread::sleep(Duration::from_millis(20));
-        let duration = timer.get_time();
-        
-        let nanos = duration.subsec_nanos();
-        let millis = nanos as f64 / 1e6;
-        assert!(millis >= 20.0);
-    }
+
 }
