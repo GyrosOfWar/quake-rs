@@ -3,15 +3,10 @@
 #![cfg_attr(feature="nightly", plugin(clippy))]
 #![feature(time2)]
 
-extern crate winapi;
-extern crate kernel32;
 extern crate sdl2;
-extern crate libc;
 
 use host::Host;
 use options::Options;
-use std::time::Instant;
-use util::DurationExt;
 
 mod options;
 mod timer;
