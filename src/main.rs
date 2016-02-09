@@ -1,10 +1,12 @@
 #![allow(dead_code)]
 #![cfg_attr(feature="nightly", feature(plugin))]
 #![cfg_attr(feature="nightly", plugin(clippy))]
+#![feature(time2)]
 
 extern crate winapi;
 extern crate kernel32;
 extern crate sdl2;
+extern crate libc;
 
 use host::Host;
 use options::Options;

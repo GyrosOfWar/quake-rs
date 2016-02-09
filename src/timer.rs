@@ -1,72 +1,42 @@
-#[cfg(target_os="windows")] use self::win32::*;
-#[cfg(any(target_os="unix", target_os="linux"))] use self::nix::*;
+use std::time::{Duration, Instant};
+use util::DurationExt;
 
+#[derive(Debug)]
 pub struct Timer {
-    last_tick: i64,
-    seconds_per_tick: f64,
-    total_time: f64,
+    last_tick: Instant,
+    total_time: Duration,
     max_frame_time: f64,
-    last_interval: f64
+    last_interval: Duration
 }
 
 impl Timer {
     pub fn new(max_framerate: i32) -> Timer {
-        let res = get_timer_resolution() as f64;
-        let spt = 1.0 / res;
         let max_frame_time = 1.0 / max_framerate as f64;
         Timer {
-            last_tick: get_perf_counter(),
-            seconds_per_tick: spt,
-            total_time: 0.0,
+            last_tick: Instant::now(),
+            total_time: Duration::from_millis(0),
             max_frame_time: max_frame_time,
-            last_interval: 0.0
+            last_interval: Duration::from_millis(0)
         }
     }
     
     pub fn filter_time(&mut self) -> Option<f64> {
-        let now = get_perf_counter();
-        let interval_seconds = (now - self.last_tick) as f64 * self.seconds_per_tick;
-        self.total_time += interval_seconds;
+        let interval = self.last_tick.elapsed();
+        let interval_seconds = self.last_tick.elapsed().seconds();
+        let now = Instant::now();
+        self.total_time = self.total_time + interval;
         if interval_seconds > self.max_frame_time {
             self.last_tick = now;
-            self.last_interval = interval_seconds;
+            self.last_interval = interval;
             Some(interval_seconds)
         } else {
             None
         }
     }
     
-    pub fn total_seconds(&self) -> f64 { self.total_time }
+    pub fn total_seconds(&self) -> f64 { self.total_time.seconds() }
     
-    pub fn last_interval(&self) -> f64 { self.last_interval }
-}
-
-#[cfg(target_os="windows")]
-mod win32 {
-    use kernel32::*;
-    
-    pub fn get_perf_counter() -> i64 {
-        let mut t = 0;
-        unsafe { QueryPerformanceCounter(&mut t); }
-        t
-    }
-    
-    pub fn get_timer_resolution() -> i64 {
-        let mut t = 0;
-        unsafe { QueryPerformanceFrequency(&mut t); }
-        t
-    }
-}
-
-#[cfg(any(target_os="unix", target_os="linux"))]
-mod nix {
-    pub fn get_perf_counter() -> i64 {
-        unimplemented!()
-    }
-    
-    pub fn get_timer_resolution() -> i64 {
-        unimplemented!()
-    }
+    pub fn last_interval(&self) -> f64 { self.last_interval.seconds() }
 }
 
 #[cfg(test)]

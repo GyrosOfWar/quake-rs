@@ -27,9 +27,7 @@ impl Host {
     #[allow(unused_variables)]
     fn frame(&mut self) {
         if let Some(time) = self.timer.filter_time() {
-            // TODO advance simulation
-            // render graphics
-
+            
         }
     }
     
