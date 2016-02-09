@@ -4,21 +4,20 @@
 
 extern crate winapi;
 extern crate kernel32;
-extern crate user32;
-extern crate gdi32;
+extern crate sdl2;
 
 use host::Host;
 use options::Options;
 
 mod options;
-mod window;
-mod event;
 mod timer;
 mod util;
 mod host;
 
 fn main() {
     let options = Options::new();
-    let mut host = Host::new(800, 600);
+    let height = options.check_param("-height").unwrap_or(600);
+    let width = options.check_param("-width").unwrap_or(800);
+    let mut host = Host::new(width, height);
     host.run();
 }

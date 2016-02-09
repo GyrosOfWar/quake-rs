@@ -23,16 +23,16 @@ impl Timer {
         }
     }
     
-    pub fn filter_time(&mut self) -> bool {
+    pub fn filter_time(&mut self) -> Option<f64> {
         let now = get_perf_counter();
         let interval_seconds = (now - self.last_tick) as f64 * self.seconds_per_tick;
         self.total_time += interval_seconds;
         if interval_seconds > self.max_frame_time {
             self.last_tick = now;
             self.last_interval = interval_seconds;
-            true
+            Some(interval_seconds)
         } else {
-            false
+            None
         }
     }
     
@@ -79,9 +79,9 @@ mod tests {
     fn test_tick() {
         let mut timer = Timer::new(2);
         thread::sleep(Duration::from_millis(480));
-        assert_eq!(timer.filter_time(), false);
+        assert_eq!(timer.filter_time().is_some(), false);
         thread::sleep(Duration::from_millis(30));
-        assert_eq!(timer.filter_time(), true);
+        assert_eq!(timer.filter_time().is_some(), true);
     }
 
 }
