@@ -8,7 +8,7 @@ A Rust re-implementation of Handmade Quake.
 
 ## Building
 As far as pre-installed libraries go, quake-rs requires SDL2. For instructions on installation, see the GitHub page 
-for (https://github.com/AngryLawyer/rust-sdl2)[rust-sdl2]. Currently, the project only builds on nightly, since I want to
+for [rust-sdl2](https://github.com/AngryLawyer/rust-sdl2). Currently, the project only builds on nightly, since I want to
 use `std::time::Instant`, which is still unstable (added recently). I recommend using multirust-rs to manage multiple Rust versions.
 
 To run tests:
