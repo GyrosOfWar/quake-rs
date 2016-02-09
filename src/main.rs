@@ -10,6 +10,8 @@ extern crate libc;
 
 use host::Host;
 use options::Options;
+use std::time::Instant;
+use util::DurationExt;
 
 mod options;
 mod timer;

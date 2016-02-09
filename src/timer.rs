@@ -3,40 +3,39 @@ use util::DurationExt;
 
 #[derive(Debug)]
 pub struct Timer {
-    last_tick: Instant,
+    last_frame: Instant,
     total_time: Duration,
-    max_frame_time: f64,
-    last_interval: Duration
+    max_frame_time: f64
 }
 
 impl Timer {
     pub fn new(max_framerate: i32) -> Timer {
         let max_frame_time = 1.0 / max_framerate as f64;
+        let now = Instant::now();
         Timer {
-            last_tick: Instant::now(),
+            last_frame: now,
             total_time: Duration::from_millis(0),
-            max_frame_time: max_frame_time,
-            last_interval: Duration::from_millis(0)
+            max_frame_time: max_frame_time
         }
     }
     
+    pub fn total_time(&self) -> Duration { self.total_time }
+    
     pub fn filter_time(&mut self) -> Option<f64> {
-        let interval = self.last_tick.elapsed();
-        let interval_seconds = self.last_tick.elapsed().seconds();
         let now = Instant::now();
-        self.total_time = self.total_time + interval;
-        if interval_seconds > self.max_frame_time {
-            self.last_tick = now;
-            self.last_interval = interval;
-            Some(interval_seconds)
-        } else {
+        
+        // Elapsed time since the last time a frame was rendered/simulated
+        let d_last_frame = self.last_frame.elapsed();
+        let d_secs = d_last_frame.seconds();
+        
+        if d_secs > self.max_frame_time {
+            self.total_time = self.total_time + d_last_frame;
+            self.last_frame = now;
+            Some(d_secs)
+        } else {        
             None
         }
     }
-    
-    pub fn total_seconds(&self) -> f64 { self.total_time.seconds() }
-    
-    pub fn last_interval(&self) -> f64 { self.last_interval.seconds() }
 }
 
 #[cfg(test)]
