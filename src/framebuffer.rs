@@ -84,16 +84,21 @@ impl Framebuffer {
         }
     }
     
-    pub fn to_color_buffer(&self) -> Vec<u8> {
-        let mut colors: Vec<_> = self.pixels.iter().map(|c| self.palette.get(*c)).collect();
-        let cap = colors.capacity();
-        let len = colors.len();
+    pub fn to_bytes(&self) -> Vec<u8> {
+        // Look up the color indices in the palette.
+        let mut colors: Vec<_> = self.pixels
+            .iter()
+            .map(|c| self.palette.get(*c))
+            .collect();
+        // A color is 4 bytes in size
+        let new_cap = colors.capacity() * 4;
+        let new_len = colors.len() * 4;
         let ptr = colors.as_mut_ptr();
         unsafe {
             mem::forget(colors);
+            // ptr is a *mut Color
             let bytes: *mut u8 = mem::transmute(ptr);
-            let new_len = len * 4;
-            let new_cap = cap * 4;
+            // Rebuild the vector with the new length and capacity.
             Vec::from_raw_parts(bytes, new_len, new_cap)
         }
     }
@@ -120,7 +125,7 @@ mod tests {
     }
     
     #[test]
-    fn to_color_buffer() {
+    fn to_bytes() {
         let w = 200;
         let sz = w * w * 4;
         let palette_index = 4;
@@ -128,7 +133,7 @@ mod tests {
         let mut fb = Framebuffer::new(w, w);
         fb.fill(palette_index);
         let p = fb.palette.get(palette_index);
-        let bytes = fb.to_color_buffer();
+        let bytes = fb.to_bytes();
         assert_eq!(bytes.len(), sz);
         for b in bytes.chunks(4) {
             assert_eq!(b[0], p.r);

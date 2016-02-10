@@ -3,10 +3,13 @@ use sdl2::video::Window;
 use sdl2::event::Event;
 use sdl2::EventPump;
 use sdl2::keyboard::Keycode;
-use sdl2::surface::SurfaceRef;
 
 use timer::Timer;
 use framebuffer::Framebuffer;
+use util::DurationExt;
+
+use std::ptr;
+use std::time::Instant;
 
 pub struct Host {
     window: Window,
@@ -31,11 +34,18 @@ impl Host {
     
     fn frame(&mut self) {
         if let Some(timestep) = self.timer.step() {
-            self.framebuffer.fill(12);
-            let colors = self.framebuffer.to_color_buffer();
-            let mut surface = self.window.surface_mut(&self.event_pump).unwrap();
-            let mut pixels = surface.without_lock_mut().unwrap();
-            // TODO put the color bytes into the surface, blit the surface to the screen
+            self.framebuffer.fill(22);
+            {
+                let bytes = self.framebuffer.to_bytes();
+                let mut surface = self.window.surface_mut(&self.event_pump).unwrap();
+                let mut pixels = surface.without_lock_mut().unwrap();
+                let src = bytes.as_ptr();
+                let dest = pixels.as_mut_ptr();
+                unsafe {                    
+                    ptr::copy_nonoverlapping(src, dest, bytes.len());
+                }
+            }
+            self.window.update_surface().unwrap();
         }
     }
     
