@@ -12,6 +12,7 @@ mod options;
 mod timer;
 mod util;
 mod host;
+mod framebuffer;
 
 fn main() {
     let options = Options::new();
