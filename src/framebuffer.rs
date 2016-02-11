@@ -79,7 +79,7 @@ impl Framebuffer {
     }
     
     pub fn fill(&mut self, color: u8) {
-        for p in self.pixels.iter_mut() {
+        for p in &mut self.pixels {
             *p = color;
         }
     }

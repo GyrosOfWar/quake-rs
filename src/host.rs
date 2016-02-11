@@ -6,10 +6,8 @@ use sdl2::keyboard::Keycode;
 
 use timer::Timer;
 use framebuffer::Framebuffer;
-use util::DurationExt;
 
 use std::ptr;
-use std::time::Instant;
 
 pub struct Host {
     window: Window,
@@ -33,15 +31,15 @@ impl Host {
     }
     
     fn frame(&mut self) {
-        if let Some(timestep) = self.timer.step() {
-            self.framebuffer.fill(22);
+        if let Some(_) = self.timer.step() {
+            self.framebuffer.fill(24);
             {
                 let bytes = self.framebuffer.to_bytes();
                 let mut surface = self.window.surface_mut(&self.event_pump).unwrap();
                 let mut pixels = surface.without_lock_mut().unwrap();
                 let src = bytes.as_ptr();
                 let dest = pixels.as_mut_ptr();
-                unsafe {                    
+                unsafe {
                     ptr::copy_nonoverlapping(src, dest, bytes.len());
                 }
             }
@@ -59,7 +57,6 @@ impl Host {
                     _ => {}
                 }
             }
-            
             self.frame();
         }
     }
