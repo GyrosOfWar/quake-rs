@@ -103,6 +103,28 @@ impl Framebuffer {
         }
     }
     
+    /// DDA line drawing.
+    pub fn line(&mut self, x1: usize, y1: usize, x2: usize, y2: usize, color: u8) {
+        let dx = (x2 - x1) as f32;
+        let dy = (y2 - y1) as f32;
+        let steps = if dx > dy {
+            dx.abs()
+        } else {
+            dy.abs()
+        };
+        
+        let xin = dx / steps;
+        let yin = dy / steps;
+        
+        let mut x: f32 = 0.0;
+        let mut y: f32 = 0.0;
+
+        for _ in 0..(steps as usize) {
+            self.set(x.round() as usize, y.round() as usize, color);
+            x += xin;
+            y += yin;
+        }
+    }
 }
 
 #[cfg(test)]

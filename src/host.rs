@@ -33,6 +33,7 @@ impl Host {
     fn frame(&mut self) {
         if let Some(_) = self.timer.step() {
             self.framebuffer.fill(24);
+            self.framebuffer.line(20, 20, 500, 500, 0);
             {
                 let bytes = self.framebuffer.to_bytes();
                 let mut surface = self.window.surface_mut(&self.event_pump).unwrap();

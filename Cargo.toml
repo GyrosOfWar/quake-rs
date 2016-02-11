@@ -9,3 +9,6 @@ nightly = ["clippy"]
 [dependencies]
 clippy = { version = "0.0.37", optional = true }
 sdl2 = "0.13.0"
+
+[profile.release]
+debug = true
