@@ -1,6 +1,6 @@
 use std::time::{Duration, Instant};
 
-const MAX_FRAMERATE: f32 = 10.0;
+const MAX_FRAMERATE: f32 = 72.0;
 
 pub struct Timer {
     start: Instant,

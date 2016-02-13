@@ -1,7 +1,6 @@
 use std::fs::File;
 use std::io::prelude::*;
 use std::{io, mem};
-use rand::{thread_rng, Rng};
 
 const PALETTE_FILE_NAME: &'static str = "palette.lmp";
 
@@ -15,7 +14,12 @@ pub struct Color {
 
 impl Color {
     pub fn new(r: u8, g: u8, b: u8) -> Color {
-        Color { r: r, g: g, b: b, _unused: 0 }
+        Color { 
+            r: r, 
+            g: g, 
+            b: b, 
+            _unused: 0 
+        }
     }
 }
 
@@ -55,7 +59,7 @@ pub struct Framebuffer {
 impl Framebuffer {
     pub fn new(width: usize, height: usize) -> Framebuffer {
         Framebuffer {
-            pixels: vec![0; width * height],
+            pixels: vec![0; height * width],
             width: width as usize,
             height: height as usize,
             palette: Palette::new().unwrap()
@@ -63,14 +67,13 @@ impl Framebuffer {
     }
     
     #[inline]
-    fn index(&self, x: usize, y: usize) -> usize {
-        x * self.height + y
+    fn index(&self, y: usize, x: usize) -> usize {
+        x * self.width + y
     }
     
     #[inline]
     pub fn set(&mut self, x: usize, y: usize, color: u8) {
         let i = self.index(x, y);
-        //println!("x={}, y={}", x, y);
         self.pixels[i] = color;
     }
     
@@ -80,8 +83,8 @@ impl Framebuffer {
     }
     
     pub fn fill(&mut self, color: u8) {
-        for p in &mut self.pixels {
-            *p = color;
+        for v in &mut self.pixels {  
+            *v = color;
         }
     }
     
@@ -104,29 +107,21 @@ impl Framebuffer {
         }
     }
     
+    pub fn pixels(&self) -> &[u8] {
+        &self.pixels
+    }
+    
     /// DDA line drawing.
     pub fn line(&mut self, x1: usize, y1: usize, x2: usize, y2: usize, color: u8) {
-        let dx = (x2 - x1) as f32;
-        let dy = (y2 - y1) as f32;
-        let steps = if dx > dy {
-            dx.abs()
-        } else {
-            dy.abs()
-        };
+        let dx = x2 as f32 - x1 as f32;
+        let dy = y2 as f32 - y1 as f32;
+        let m = dy / dx;
+        let mut y = y1 as f32;
         
-        let xin = dx / steps;
-        let yin = dy / steps;
-        
-        let mut x: f32 = x1 as f32;
-        let mut y: f32 = y1 as f32;
-
-        for _ in 0..(steps as usize) {
-            let xc = x.round() as usize;
-            let yc = y.round() as usize;
-            
-            self.set(xc, yc, color);
-            x += xin;
-            y += yin;
+        for x in x1..x2 {
+            let iy = y.round() as usize;
+            self.set(x, iy, color);
+            y += m;
         }
     }
 }
@@ -137,8 +132,8 @@ mod tests {
     
     #[test]
     fn create_framebuffer() {
-        let h = 400;
-        let w = 300;
+        let h = 20;
+        let w = 16;
         
         let mut fb = Framebuffer::new(w, h);
         for i in 0..w {
@@ -147,7 +142,7 @@ mod tests {
             }
         }
         
-        assert_eq!(fb.get(20, 20), 20);
+        assert_eq!(fb.get(w-1, h-1), 20);
     }
     
     #[test]
@@ -170,8 +165,8 @@ mod tests {
     
     #[test]
     fn test_set() {
-        let w = 400;
-        let h = 300;
+        let w = 20;
+        let h = 16;
         let mut fb = Framebuffer::new(w, h);
         
         for y in 0..h {
@@ -180,6 +175,8 @@ mod tests {
             }
         }
         
-        
+        for p in fb.pixels() {
+            assert_eq!(*p, 3);
+        }
     }
 }
