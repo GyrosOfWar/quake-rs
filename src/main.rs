@@ -4,9 +4,9 @@
 #![feature(time2)]
 
 extern crate sdl2;
+extern crate rand;
 
 use host::Host;
-use options::Options;
 
 mod options;
 mod timer;
@@ -15,9 +15,5 @@ mod host;
 mod framebuffer;
 
 fn main() {
-    let options = Options::new();
-    let height = options.check_param("-height").unwrap_or(600);
-    let width = options.check_param("-width").unwrap_or(800);
-    let mut host = Host::new(width, height);
-    host.run();
+    Host::new().run();
 }

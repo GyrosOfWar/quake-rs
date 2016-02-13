@@ -1,14 +1,20 @@
 [package]
+authors = ["Martin Tomasi <martin.tomasi@gmail.com>"]
 name = "quake-rs"
 version = "0.1.0"
-authors = ["Martin Tomasi <martin.tomasi@gmail.com>"]
+
+[dependencies]
+rand = "0.3.13"
+sdl2 = "0.13.0"
+
+[dependencies.clippy]
+optional = true
+version = "0.0.37"
 
 [features]
 nightly = ["clippy"]
 
-[dependencies]
-clippy = { version = "0.0.37", optional = true }
-sdl2 = "0.13.0"
+[profile]
 
 [profile.release]
 debug = true

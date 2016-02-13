@@ -5,6 +5,7 @@ use sdl2::EventPump;
 use sdl2::keyboard::Keycode;
 
 use timer::Timer;
+use options::Options;
 use framebuffer::Framebuffer;
 
 use std::ptr;
@@ -13,27 +14,32 @@ pub struct Host {
     window: Window,
     event_pump: EventPump,
     timer: Timer,
-    framebuffer: Framebuffer
+    framebuffer: Framebuffer,
+    options: Options
 }
 
 impl Host {
-    pub fn new(x: u32, y: u32) -> Host {
+    pub fn new() -> Host {
+        let options = Options::new();
         let context = sdl2::init().unwrap();
         let video = context.video().unwrap();
-        let window = video.window("rsquake", x, y).build().unwrap();
+        let width = options.check_param("-width").unwrap_or(800);
+        let height = options.check_param("-height").unwrap_or(600);
+        let window = video.window("rsquake", width, height).build().unwrap();
         
         Host {
             window: window,
             event_pump: context.event_pump().unwrap(),
             timer: Timer::new(), 
-            framebuffer: Framebuffer::new(x as usize, y as usize)
+            framebuffer: Framebuffer::new(width as usize, height as usize),
+            options: options
         }
     }
     
     fn frame(&mut self) {
         if let Some(_) = self.timer.step() {
-            self.framebuffer.fill(24);
-            self.framebuffer.line(20, 20, 500, 500, 0);
+            self.framebuffer.fill(8);
+            self.framebuffer.line(50, 50, 50, 500, 0);
             {
                 let bytes = self.framebuffer.to_bytes();
                 let mut surface = self.window.surface_mut(&self.event_pump).unwrap();
@@ -43,6 +49,7 @@ impl Host {
                 unsafe {
                     ptr::copy_nonoverlapping(src, dest, bytes.len());
                 }
+
             }
             self.window.update_surface().unwrap();
         }

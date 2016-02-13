@@ -1,7 +1,7 @@
 use std::fs::File;
-use std::io;
 use std::io::prelude::*;
-use std::mem;
+use std::{io, mem};
+use rand::{thread_rng, Rng};
 
 const PALETTE_FILE_NAME: &'static str = "palette.lmp";
 
@@ -13,6 +13,12 @@ pub struct Color {
     _unused: u8
 }
 
+impl Color {
+    pub fn new(r: u8, g: u8, b: u8) -> Color {
+        Color { r: r, g: g, b: b, _unused: 0 }
+    }
+}
+
 pub struct Palette {
     colors: [Color; 256]
 }
@@ -20,25 +26,13 @@ pub struct Palette {
 impl Palette {
     pub fn new() -> io::Result<Palette>  {
         let mut buf = [Color::default(); 256];
-        let reader = io::BufReader::new(try!(File::open(PALETTE_FILE_NAME)));
-        let mut color = Color::default();
-        let mut c = 0;
+        let mut reader = io::BufReader::new(try!(File::open(PALETTE_FILE_NAME)));
+        let mut bytes = vec![];
+        try!(reader.read_to_end(&mut bytes));
         
-        for (i, byte) in reader.bytes().enumerate() {
-            let byte = try!(byte);
-            let p = i % 3;
-            
-            match p {
-                0 => color.r = byte,
-                1 => color.g = byte,
-                2 => {
-                    color.b = byte;
-                    buf[c] = color;
-                    color = Color::default();
-                    c += 1;
-                },
-                _ => unreachable!()
-            }
+        for (i, b) in bytes.chunks(3).enumerate() {
+            let (r, g, b) = (b[0], b[1], b[2]);
+            buf[i] = Color::new(r, g, b);
         }
         
         Ok(Palette {
@@ -69,13 +63,20 @@ impl Framebuffer {
     }
     
     #[inline]
+    fn index(&self, x: usize, y: usize) -> usize {
+        x * self.height + y
+    }
+    
+    #[inline]
     pub fn set(&mut self, x: usize, y: usize, color: u8) {
-        self.pixels[x * self.width + y] = color;
+        let i = self.index(x, y);
+        //println!("x={}, y={}", x, y);
+        self.pixels[i] = color;
     }
     
     #[inline]
     pub fn get(&self, x: usize, y: usize) -> u8 {
-        self.pixels[x * self.width + y]
+        self.pixels[self.index(x, y)]
     }
     
     pub fn fill(&mut self, color: u8) {
@@ -116,11 +117,14 @@ impl Framebuffer {
         let xin = dx / steps;
         let yin = dy / steps;
         
-        let mut x: f32 = 0.0;
-        let mut y: f32 = 0.0;
+        let mut x: f32 = x1 as f32;
+        let mut y: f32 = y1 as f32;
 
         for _ in 0..(steps as usize) {
-            self.set(x.round() as usize, y.round() as usize, color);
+            let xc = x.round() as usize;
+            let yc = y.round() as usize;
+            
+            self.set(xc, yc, color);
             x += xin;
             y += yin;
         }
@@ -162,5 +166,20 @@ mod tests {
             assert_eq!(b[1], p.g);
             assert_eq!(b[2], p.b);
         }
+    }
+    
+    #[test]
+    fn test_set() {
+        let w = 400;
+        let h = 300;
+        let mut fb = Framebuffer::new(w, h);
+        
+        for y in 0..h {
+            for x in 0..w {
+                fb.set(x, y, 3);
+            }
+        }
+        
+        
     }
 }
