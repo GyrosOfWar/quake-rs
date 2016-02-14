@@ -53,7 +53,7 @@ pub struct Framebuffer {
     pixels: Vec<u8>,
     width: usize,
     height: usize,
-    pub palette: Palette,
+    pub palette: Palette
 }
 
 impl Framebuffer {
@@ -88,6 +88,7 @@ impl Framebuffer {
         }
     }
     
+    // TODO add benchmarks
     pub fn to_bytes(&self) -> Vec<u8> {
         // Look up the color indices in the palette.
         let mut colors: Vec<_> = self.pixels
