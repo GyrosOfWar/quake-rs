@@ -6,16 +6,18 @@ pub struct Timer {
     start: Instant,
     last_frame: Instant,
     total: Duration,
-    frame_duration: Duration
+    frame_duration: Duration,
+    unlocked: bool
 }
 
 impl Timer {
-    pub fn new() -> Timer {
+    pub fn new(unlocked: bool) -> Timer {
         Timer {
             start: Instant::now(),
             last_frame: Instant::now(),
             total: Duration::from_millis(0),
-            frame_duration: Duration::new(0, (1e9 / MAX_FRAMERATE) as u32)
+            frame_duration: Duration::new(0, (1e9 / MAX_FRAMERATE) as u32),
+            unlocked: unlocked,
         }
     }
     
@@ -23,7 +25,7 @@ impl Timer {
         let now = Instant::now();
         let timestep = now.duration_from_earlier(self.last_frame);
         self.total = self.start.elapsed();
-        if timestep > self.frame_duration {
+        if self.unlocked || timestep > self.frame_duration {
             self.last_frame = now;
             Some(timestep)
         } else {
@@ -42,7 +44,7 @@ mod tests {
     
     #[test]
     fn test_tick() {
-        let mut timer = Timer::new();
+        let mut timer = Timer::new(false);
         thread::sleep(Duration::from_millis(5));
         assert_eq!(timer.step().is_some(), false);
         thread::sleep(Duration::from_millis(9));

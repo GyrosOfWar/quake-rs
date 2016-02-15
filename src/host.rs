@@ -9,8 +9,9 @@ use options::Options;
 use framebuffer::Framebuffer;
 use util::DurationExt;
 
-use std::{ptr, io, time};
+use std::{ptr, io};
 use std::io::prelude::*;
+use rand::{thread_rng, Rng};
 
 const DEFAULT_WIDTH: u32 = 800;
 const DEFAULT_HEIGHT: u32 = 600;
@@ -31,14 +32,16 @@ impl Host {
         let video = context.video().unwrap();
         let width = options.check_param("-width").unwrap_or(DEFAULT_WIDTH);
         let height = options.check_param("-height").unwrap_or(DEFAULT_HEIGHT);
-        let mut window_builder = video.window("rsquake", width, height);
+        let window_builder = video.window("rsquake", width, height);
         let window = window_builder.build().unwrap();
         let debug = options.is_set("-debug");
+        // Unlock the framerate in debug mode
+        let timer = Timer::new(debug);
         
         Host {
             window: window,
             event_pump: context.event_pump().unwrap(),
-            timer: Timer::new(), 
+            timer: timer,
             framebuffer: Framebuffer::new(width as usize, height as usize),
             options: options,
             debug: debug
@@ -49,23 +52,40 @@ impl Host {
         if let Some(timestep) = self.timer.step() {
             if self.debug {
                 let fps = (1.0 / timestep.seconds()).round();
-                write!(stdout, "{} FPS\n", fps).unwrap();
+                write!(stdout, "\r{} FPS", fps).unwrap();
             }
             
-            self.framebuffer.fill(15);
-            self.framebuffer.line(0, 0, 799, 599, 0);
-            {
-                let bytes = self.framebuffer.to_bytes();
-                let mut surface = self.window.surface_mut(&self.event_pump).unwrap();
-                let mut pixels = surface.without_lock_mut().unwrap();
-                let src = bytes.as_ptr();
-                let dest = pixels.as_mut_ptr();
-                unsafe {
-                    ptr::copy_nonoverlapping(src, dest, bytes.len());
-                }
-            }
-            self.window.update_surface().unwrap();
+            self.draw();
+            self.swap_buffers();
         }
+    }
+    
+    fn draw(&mut self) {
+        let rect_size = 100;
+        
+        let mut rng = thread_rng();
+        let fg = rng.gen();
+        let xoff = rng.gen_range(-10, 10);
+        let yoff = rng.gen_range(-10, 10);
+        let x = (self.framebuffer.width() as i32 / 2) + xoff - (rect_size / 2);
+        let y = (self.framebuffer.height() as i32 / 2) + yoff - (rect_size / 2);
+        
+        let r = rect_size as usize;
+        self.framebuffer.fill(0);
+        self.framebuffer.rect(x as usize, y as usize, r, r , fg);
+    }
+    
+    fn swap_buffers(&mut self) {
+        self.framebuffer.swap_buffers();
+        {
+            let mut surface = self.window.surface_mut(&self.event_pump).unwrap();
+            let mut pixels = surface.without_lock_mut().unwrap();
+            let bytes = self.framebuffer.color_buffer();
+            let src = bytes.as_ptr();
+            let dest = pixels.as_mut_ptr();
+            unsafe { ptr::copy_nonoverlapping(src, dest, bytes.len()); }
+        }
+        self.window.update_surface().unwrap();
     }
     
     pub fn run(&mut self) {

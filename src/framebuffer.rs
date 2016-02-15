@@ -1,6 +1,6 @@
 use std::fs::File;
 use std::io::prelude::*;
-use std::{io, mem};
+use std::io;
 
 const PALETTE_FILE_NAME: &'static str = "palette.lmp";
 
@@ -50,9 +50,14 @@ impl Palette {
 }
 
 pub struct Framebuffer {
+    /// Buffer of byte values, indexes into the palette. 
+    /// Size is width * height, treated like a fixed-size array.
     pixels: Vec<u8>,
     width: usize,
     height: usize,
+    /// Buffer of colors as they will be rendered to the screen.
+    /// Size is width * height * 4 (32 bpp), also treated like a fixed-size array.
+    color_buffer: Vec<u8>,
     pub palette: Palette
 }
 
@@ -62,6 +67,7 @@ impl Framebuffer {
             pixels: vec![0; height * width],
             width: width as usize,
             height: height as usize,
+            color_buffer: vec![0; height * width * 4],
             palette: Palette::new().unwrap()
         }
     }
@@ -88,28 +94,31 @@ impl Framebuffer {
         }
     }
     
-    // TODO add benchmarks
-    pub fn to_bytes(&self) -> Vec<u8> {
-        // Look up the color indices in the palette.
-        let mut colors: Vec<_> = self.pixels
-            .iter()
-            .map(|c| self.palette.get(*c))
-            .collect();
-        // A color is 4 bytes in size
-        let new_cap = colors.capacity() * 4;
-        let new_len = colors.len() * 4;
-        let ptr = colors.as_mut_ptr();
-        unsafe {
-            mem::forget(colors);
-            // ptr is a *mut Color
-            let bytes: *mut u8 = mem::transmute(ptr);
-            // Rebuild the vector with the new length and capacity.
-            Vec::from_raw_parts(bytes, new_len, new_cap)
+    pub fn width(&self) -> usize { self.width }
+    
+    pub fn height(&self) -> usize { self.height }
+    
+    /// Copies the values currently in the `pixels` array to the 
+    /// color buffer and translates them through the palette.
+    pub fn swap_buffers(&mut self) {
+        let mut i = 0;           
+        for px in &self.pixels {
+            let color = self.palette.get(*px);
+            self.color_buffer[i] = color.r;
+            self.color_buffer[i+1] = color.g;
+            self.color_buffer[i+2] = color.b;
+            self.color_buffer[i+3] = 0; 
+            
+            i += 4;  
         }
     }
     
     pub fn pixels(&self) -> &[u8] {
         &self.pixels
+    }
+    
+    pub fn color_buffer(&self) -> &[u8] {
+        &self.color_buffer
     }
     
     /// DDA line drawing.
@@ -123,6 +132,16 @@ impl Framebuffer {
             let iy = y.round() as usize;
             self.set(x, iy, color);
             y += m;
+        }
+    }
+    
+    pub fn rect(&mut self, x: usize, y: usize, width: usize, height: usize, color: u8) {
+        let xm = x + width + 1;
+        let ym = y + height + 1;
+        for h in y..ym {
+            for w in x..xm {
+                self.set(w, h, color);
+            }
         }
     }
 }
@@ -155,7 +174,8 @@ mod tests {
         let mut fb = Framebuffer::new(w, w);
         fb.fill(palette_index);
         let p = fb.palette.get(palette_index);
-        let bytes = fb.to_bytes();
+        fb.swap_buffers();
+        let bytes = fb.color_buffer();
         assert_eq!(bytes.len(), sz);
         for b in bytes.chunks(4) {
             assert_eq!(b[0], p.r);
