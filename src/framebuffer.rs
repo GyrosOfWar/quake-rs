@@ -137,24 +137,24 @@ impl Framebuffer {
 
     /// Bresenham line drawing
     pub fn bre_line(&mut self, x0: usize, y0: usize, x1: usize, y1: usize, color: u8) {
-        let dx = x1 - x0;
-        let dy = y1 - y0;
+        let dx = (x1 - x0) as i32;
+        let dy = (y1 - y0) as i32;
         let mut d = 2 * dy - dx;
 
         self.set(x0, y0, color);
         let mut y = y0;
 
         if d > 0 {
-            y = y + 1;
-            d = d - (2 * dx);
+            y += 1;
+            d -= 2 * dx;
         }
 
         for x in x0+1..x1  {
             self.set(x, y, color);
             d = d + (2 * dy);
             if d > 0 {
-                y = y + 1;
-                d = d - (2 * dx);
+                y += 1;
+                d -= 2 * dx;
             }
         }
     }
