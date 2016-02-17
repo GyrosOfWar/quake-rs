@@ -225,3 +225,27 @@ mod tests {
         }
     }
 }
+
+// #[cfg(bench)]
+mod bench {
+    use test::Bencher;
+    use super::*;
+    const WIDTH: usize = 2560;
+    const HEIGHT: usize = 1440;
+    
+    #[bench]
+    fn bench_dda(b: &mut Bencher) {
+        let mut fb = Framebuffer::new(WIDTH, HEIGHT);
+        b.iter(|| {
+            fb.line(0, 0, 799, 599, 12);
+        });
+    }
+
+    #[bench]
+    fn bench_bresenham(b: &mut Bencher) {
+        let mut fb = Framebuffer::new(WIDTH, HEIGHT);
+        b.iter(|| {
+            fb.bre_line(0, 0, 799, 599, 12);
+        });
+    }
+}

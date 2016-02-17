@@ -1,10 +1,11 @@
 #![allow(dead_code)]
 #![cfg_attr(feature="nightly", feature(plugin))]
 #![cfg_attr(feature="nightly", plugin(clippy))]
-#![feature(time2)]
+#![feature(time2, test)]
 
 extern crate sdl2;
 extern crate rand;
+extern crate test;
 
 use host::Host;
 
