@@ -13,6 +13,7 @@ mod timer;
 mod util;
 mod host;
 mod framebuffer;
+mod vertex;
 
 fn main() {
     Host::new().run();

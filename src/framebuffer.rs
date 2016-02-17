@@ -1,6 +1,9 @@
 use std::fs::File;
 use std::io::prelude::*;
 use std::io;
+use std::cmp;
+
+use vertex::Vertex;
 
 const PALETTE_FILE_NAME: &'static str = "palette.lmp";
 
@@ -157,6 +160,34 @@ impl Framebuffer {
                 d = d - (2 * dx);
             }
         }
+    }
+
+    /// Barycentric triangle drawing
+    pub fn triangle(&mut self, v1: Vertex, v2: Vertex, v3: Vertex, color: u8) {
+        let max_x = cmp::max(v1.x, cmp::max(v2.x, v3.x));
+        let min_x = cmp::min(v1.x, cmp::max(v2.x, v3.x));
+        let max_y = cmp::max(v1.y, cmp::max(v2.y, v3.y));
+        let min_y = cmp::min(v1.y, cmp::min(v2.y, v3.y));
+
+        let v1 = Vertex::new(v2.x - v1.x, v2.y - v1.y);
+        let v2 = Vertex::new(v3.x - v1.x, v3.y - v1.y);
+
+        for x in min_x..max_x {
+            for y in min_y..max_y {
+                let q = Vertex::new(x - v1.x, y - v1.y);
+
+                let s = self.cross_product(q, v2) / self.cross_product(v1, v2);
+                let t = self.cross_product(v1, q) / self.cross_product(v1, v2);
+
+                if (s >= 0.0) && (t >= 0.0) && (s + t <= 1.0) {
+                    self.set(x, y, color);
+                }
+            }
+        }
+    }
+
+    pub fn cross_product(&mut self, v1: Vertex, v2: Vertex) -> f32 {
+        return (v1.x * v2.y - v2.x * v1.y) as f32;
     }
 
     pub fn rect(&mut self, x: usize, y: usize, width: usize, height: usize, color: u8) {

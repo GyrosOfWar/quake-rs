@@ -13,6 +13,8 @@ use std::{ptr, io};
 use std::io::prelude::*;
 use rand::{thread_rng, Rng};
 
+use vertex::Vertex;
+
 const DEFAULT_WIDTH: u32 = 800;
 const DEFAULT_HEIGHT: u32 = 600;
 
@@ -75,6 +77,7 @@ impl Host {
         self.framebuffer.rect(x as usize, y as usize, r, r , fg);
         self.framebuffer.line(20, 70, 300, 350, fg);
         self.framebuffer.bre_line(20, 20, 300, 300, fg);
+        self.framebuffer.triangle(Vertex::new(400, 100), Vertex::new(400, 400), Vertex::new(300, 300), fg);
     }
 
     fn swap_buffers(&mut self) {
