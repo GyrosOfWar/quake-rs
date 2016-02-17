@@ -165,7 +165,7 @@ impl Framebuffer {
     /// Barycentric triangle drawing
     pub fn triangle(&mut self, v1: Vertex, v2: Vertex, v3: Vertex, color: u8) {
         let max_x = cmp::max(v1.x, cmp::max(v2.x, v3.x));
-        let min_x = cmp::min(v1.x, cmp::max(v2.x, v3.x));
+        let min_x = cmp::min(v1.x, cmp::min(v2.x, v3.x));
         let max_y = cmp::max(v1.y, cmp::max(v2.y, v3.y));
         let min_y = cmp::min(v1.y, cmp::min(v2.y, v3.y));
 
@@ -263,7 +263,7 @@ mod bench {
     use super::*;
     const WIDTH: usize = 2560;
     const HEIGHT: usize = 1440;
-    
+
     #[bench]
     fn bench_dda(b: &mut Bencher) {
         let mut fb = Framebuffer::new(WIDTH, HEIGHT);
