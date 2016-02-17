@@ -37,7 +37,7 @@ impl Host {
         let debug = options.is_set("-debug");
         // Unlock the framerate in debug mode
         let timer = Timer::new(debug);
-        
+
         Host {
             window: window,
             event_pump: context.event_pump().unwrap(),
@@ -47,34 +47,36 @@ impl Host {
             debug: debug
         }
     }
-    
+
     fn frame(&mut self, stdout: &mut io::StdoutLock) {
         if let Some(timestep) = self.timer.step() {
             if self.debug {
                 let fps = (1.0 / timestep.seconds()).round();
-                write!(stdout, "\r{} FPS", fps).unwrap();
+                write!(stdout, "{} FPS\n", fps).unwrap();
             }
-            
+
             self.draw();
             self.swap_buffers();
         }
     }
-    
+
     fn draw(&mut self) {
         let rect_size = 100;
-        
+
         let mut rng = thread_rng();
         let fg = rng.gen();
         let xoff = rng.gen_range(-10, 10);
         let yoff = rng.gen_range(-10, 10);
         let x = (self.framebuffer.width() as i32 / 2) + xoff - (rect_size / 2);
         let y = (self.framebuffer.height() as i32 / 2) + yoff - (rect_size / 2);
-        
+
         let r = rect_size as usize;
         self.framebuffer.fill(0);
         self.framebuffer.rect(x as usize, y as usize, r, r , fg);
+        self.framebuffer.line(20, 70, 300, 350, fg);
+        self.framebuffer.bre_line(20, 20, 300, 300, fg);
     }
-    
+
     fn swap_buffers(&mut self) {
         self.framebuffer.swap_buffers();
         {
@@ -87,11 +89,11 @@ impl Host {
         }
         self.window.update_surface().unwrap();
     }
-    
+
     pub fn run(&mut self) {
         let stdout = io::stdout();
         let mut lock = stdout.lock();
-        
+
         'main: loop {
             for event in self.event_pump.poll_iter() {
                 match event {
