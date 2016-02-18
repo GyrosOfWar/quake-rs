@@ -14,7 +14,7 @@ mod timer;
 mod util;
 mod host;
 mod framebuffer;
-mod vertex;
+mod bezier;
 
 fn main() {
     Host::new().run();

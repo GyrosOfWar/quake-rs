@@ -1,30 +1,11 @@
 use std::fs::File;
 use std::io::prelude::*;
-use std::io;
-use std::cmp;
+use std::{io, f32};
 
-use vertex::Vertex;
+use bezier::BezierCurve;
+use util::{Color, Vec2, step};
 
 const PALETTE_FILE_NAME: &'static str = "palette.lmp";
-
-#[derive(Debug, PartialEq, Eq, Default, Clone, Copy)]
-pub struct Color {
-    pub r: u8,
-    pub g: u8,
-    pub b: u8,
-    _unused: u8
-}
-
-impl Color {
-    pub fn new(r: u8, g: u8, b: u8) -> Color {
-        Color {
-            r: r,
-            g: g,
-            b: b,
-            _unused: 0
-        }
-    }
-}
 
 pub struct Palette {
     colors: [Color; 256]
@@ -107,7 +88,7 @@ impl Framebuffer {
         let mut i = 0;
         for px in &self.pixels {
             let color = self.palette.get(*px);
-            self.color_buffer[i] = color.r;
+            self.color_buffer[i  ] = color.r;
             self.color_buffer[i+1] = color.g;
             self.color_buffer[i+2] = color.b;
             self.color_buffer[i+3] = 0;
@@ -163,31 +144,25 @@ impl Framebuffer {
     }
 
     /// Barycentric triangle drawing
-    pub fn triangle(&mut self, v1: Vertex, v2: Vertex, v3: Vertex, color: u8) {
-        let max_x = cmp::max(v1.x, cmp::max(v2.x, v3.x));
-        let min_x = cmp::min(v1.x, cmp::min(v2.x, v3.x));
-        let max_y = cmp::max(v1.y, cmp::max(v2.y, v3.y));
-        let min_y = cmp::min(v1.y, cmp::min(v2.y, v3.y));
+    pub fn triangle(&mut self, v1: Vec2, v2: Vec2, v3: Vec2, color: u8) {
+        let max_x = f32::max(v1.x, f32::max(v2.x, v3.x));
+        let min_x = f32::min(v1.x, f32::min(v2.x, v3.x));
+        let max_y = f32::max(v1.y, f32::max(v2.y, v3.y));
+        let min_y = f32::min(v1.y, f32::min(v2.y, v3.y));
 
-        let v1 = Vertex::new(v2.x - v1.x, v2.y - v1.y);
-        let v2 = Vertex::new(v3.x - v1.x, v3.y - v1.y);
-
-        for x in min_x..max_x {
-            for y in min_y..max_y {
-                let q = Vertex::new(x - v1.x, y - v1.y);
-
-                let s = self.cross_product(q, v2) / self.cross_product(v1, v2);
-                let t = self.cross_product(v1, q) / self.cross_product(v1, v2);
+        let v1 = Vec2::new(v2.x - v1.x, v2.y - v1.y);
+        let v2 = Vec2::new(v3.x - v1.x, v3.y - v1.y);
+        for x in step(min_x, max_x) {
+            for y in step(min_y, max_y) {
+                let q = Vec2::new(x - v1.x, y - v1.y);
+                let s = q.dot(v2) / v1.dot(v2);
+                let t = v1.dot(q) / v1.dot(v2);
 
                 if (s >= 0.0) && (t >= 0.0) && (s + t <= 1.0) {
-                    self.set(x, y, color);
+                    self.set(x.round() as usize, y.round() as usize, color);
                 }
             }
         }
-    }
-
-    pub fn cross_product(&mut self, v1: Vertex, v2: Vertex) -> f32 {
-        return (v1.x * v2.y - v2.x * v1.y) as f32;
     }
 
     pub fn rect(&mut self, x: usize, y: usize, width: usize, height: usize, color: u8) {
@@ -197,6 +172,12 @@ impl Framebuffer {
             for w in x..xm {
                 self.set(w, h, color);
             }
+        }
+    }
+
+    pub fn bezier(&mut self, curve: BezierCurve, n: usize, color: u8) {
+        for p in curve.approximate(n) {
+            self.set(p.x as usize, p.y as usize, color);
         }
     }
 }

@@ -1,4 +1,5 @@
 use std::time::Duration;
+use std::ops;
 
 /// Provides some additional conversions for Duration types. 
 pub trait DurationExt {
@@ -35,6 +36,99 @@ impl DurationExt for Duration {
         } else {
             Duration::new(0, nanos as u32)
         }
+    }
+}
+
+#[derive(Debug, PartialEq, Eq, Default, Clone, Copy)]
+pub struct Color {
+    pub r: u8,
+    pub g: u8,
+    pub b: u8,
+    _unused: u8
+}
+
+impl Color {
+    pub fn new(r: u8, g: u8, b: u8) -> Color {
+        Color {
+            r: r,
+            g: g,
+            b: b,
+            _unused: 0
+        }
+    }
+}
+
+const EPSILON: f32 = 0.0001;
+
+pub fn step(start: f32, end: f32) -> F32Step {
+    assert!(end >= start);
+    
+    F32Step {
+        start: start,
+        end: end,
+        current: start
+    }
+}
+
+fn almost_eq(a: f32, b: f32) -> bool {
+    (a - b).abs() < EPSILON
+}
+
+pub struct F32Step {
+    start: f32,
+    end: f32,
+    current: f32
+}
+
+impl Iterator for F32Step {
+    type Item = f32;
+
+    fn next(&mut self) -> Option<f32> {
+        if almost_eq(self.current, self.end) {
+            None
+        } else {
+            let c = self.current;
+            self.current += 1.0;
+            Some(c)
+        }
+    }
+
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        let d = (self.end - self.start) as usize;
+
+        (d, Some(d))
+    }
+}
+
+#[derive(Debug, Copy, Clone, PartialEq)]
+pub struct Vec2 {
+    pub x: f32,
+    pub y: f32
+}
+
+impl Vec2 {
+    pub fn new(x: f32, y: f32) -> Vec2 {
+        Vec2 { x: x, y: y }
+    }
+
+    pub fn dot(self, other: Vec2) -> f32 {
+        self.x * other.x + self.y * other.y
+    }
+}
+
+impl ops::Add for Vec2 {
+    type Output = Vec2;
+
+    fn add(self, other: Vec2) -> Vec2 {
+        Vec2 { x: self.x + other.y, y: self.y + other.y }
+    }
+}
+
+impl ops::Mul<f32> for Vec2 {
+    type Output = Vec2;
+
+    fn mul(self, t: f32) -> Vec2 {
+        Vec2 { x: self.x * t, y: self.y * t }
     }
 }
 

@@ -7,13 +7,12 @@ use sdl2::keyboard::Keycode;
 use timer::Timer;
 use options::Options;
 use framebuffer::Framebuffer;
-use util::DurationExt;
+use util::{Vec2, DurationExt};
+use bezier::BezierCurve;
 
 use std::{ptr, io};
 use std::io::prelude::*;
 use rand::{thread_rng, Rng};
-
-use vertex::Vertex;
 
 const DEFAULT_WIDTH: u32 = 800;
 const DEFAULT_HEIGHT: u32 = 600;
@@ -46,7 +45,7 @@ impl Host {
             timer: timer,
             framebuffer: Framebuffer::new(width as usize, height as usize),
             options: options,
-            debug: debug
+            debug: debug,
         }
     }
 
@@ -54,7 +53,7 @@ impl Host {
         if let Some(timestep) = self.timer.step() {
             if self.debug {
                 let fps = (1.0 / timestep.seconds()).round();
-                write!(stdout, "{} FPS\n", fps).unwrap();
+                write!(stdout, "\r{} FPS", fps).unwrap();
             }
 
             self.draw();
@@ -63,21 +62,13 @@ impl Host {
     }
 
     fn draw(&mut self) {
-        let rect_size = 100;
-
-        let mut rng = thread_rng();
-        let fg = rng.gen();
-        let xoff = rng.gen_range(-10, 10);
-        let yoff = rng.gen_range(-10, 10);
-        let x = (self.framebuffer.width() as i32 / 2) + xoff - (rect_size / 2);
-        let y = (self.framebuffer.height() as i32 / 2) + yoff - (rect_size / 2);
-
-        let r = rect_size as usize;
         self.framebuffer.fill(0);
-        self.framebuffer.rect(x as usize, y as usize, r, r , fg);
-        self.framebuffer.line(20, 70, 300, 350, fg);
-        self.framebuffer.bre_line(20, 20, 300, 300, fg);
-        self.framebuffer.triangle(Vertex::new(400, 100), Vertex::new(400, 400), Vertex::new(300, 300), fg);
+        self.framebuffer.triangle(
+            Vec2::new(0.0, 0.0),
+            Vec2::new(150.0, 150.0),
+            Vec2::new(300.0, 300.0),
+            12
+        );
     }
 
     fn swap_buffers(&mut self) {
@@ -96,7 +87,9 @@ impl Host {
     pub fn run(&mut self) {
         let stdout = io::stdout();
         let mut lock = stdout.lock();
-
+        if self.debug {
+            println!("");
+        }
         'main: loop {
             for event in self.event_pump.poll_iter() {
                 match event {
@@ -107,6 +100,9 @@ impl Host {
                 }
             }
             self.frame(&mut lock);
+        }
+        if self.debug {
+            println!("");
         }
     }
 }
