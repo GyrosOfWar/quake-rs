@@ -8,11 +8,10 @@ use timer::Timer;
 use options::Options;
 use framebuffer::Framebuffer;
 use util::{Vec2, DurationExt};
-use bezier::BezierCurve;
+use lmp::LmpImage;
 
 use std::{ptr, io};
 use std::io::prelude::*;
-use rand::{thread_rng, Rng};
 
 const DEFAULT_WIDTH: u32 = 800;
 const DEFAULT_HEIGHT: u32 = 600;
@@ -24,6 +23,7 @@ pub struct Host {
     framebuffer: Framebuffer,
     options: Options,
     debug: bool,
+    images: Vec<LmpImage>
 }
 
 impl Host {
@@ -37,7 +37,8 @@ impl Host {
         let window = window_builder.build().unwrap();
         let debug = options.is_set("-debug");
         // Unlock the framerate in debug mode
-        let timer = Timer::new(debug);
+        let timer = Timer::new(debug);        
+        let images = vec![LmpImage::from_file("pause.lmp").unwrap()];
 
         Host {
             window: window,
@@ -46,6 +47,7 @@ impl Host {
             framebuffer: Framebuffer::new(width as usize, height as usize),
             options: options,
             debug: debug,
+            images: images
         }
     }
 
@@ -63,12 +65,7 @@ impl Host {
 
     fn draw(&mut self) {
         self.framebuffer.fill(0);
-        self.framebuffer.triangle(
-            Vec2::new(0.0, 0.0),
-            Vec2::new(150.0, 150.0),
-            Vec2::new(300.0, 300.0),
-            12
-        );
+        self.framebuffer.draw_pic(100, 100, &self.images[0]);
     }
 
     fn swap_buffers(&mut self) {

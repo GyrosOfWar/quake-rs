@@ -5,7 +5,8 @@ version = "0.1.0"
 
 [dependencies]
 rand = "0.3.13"
-sdl2 = "0.13.0"
+sdl2 = "0.14.0"
+byteorder = "0.4.2"
 
 [dependencies.clippy]
 optional = true

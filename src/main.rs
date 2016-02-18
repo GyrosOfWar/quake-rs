@@ -6,6 +6,7 @@
 extern crate sdl2;
 extern crate rand;
 extern crate test;
+extern crate byteorder;
 
 use host::Host;
 
@@ -15,6 +16,7 @@ mod util;
 mod host;
 mod framebuffer;
 mod bezier;
+mod lmp;
 
 fn main() {
     Host::new().run();

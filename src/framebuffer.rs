@@ -4,6 +4,7 @@ use std::{io, f32};
 
 use bezier::BezierCurve;
 use util::{Color, Vec2, step};
+use lmp::LmpImage;
 
 const PALETTE_FILE_NAME: &'static str = "palette.lmp";
 
@@ -180,6 +181,17 @@ impl Framebuffer {
             self.set(p.x as usize, p.y as usize, color);
         }
     }
+    
+    pub fn draw_pic(&mut self, x_pos: usize, y_pos: usize, image: &LmpImage) {
+        // Not the fastst solution, probably
+        for j in 0..image.height() {
+            for i in 0..image.width() {
+                let x = i as usize + x_pos;
+                let y = j as usize + y_pos;
+                self.set(x, y, image.get(i, j));
+            }
+        }
+    }
 }
 
 #[cfg(test)]
@@ -238,7 +250,7 @@ mod tests {
     }
 }
 
-// #[cfg(bench)]
+#[cfg(test)]
 mod bench {
     use test::Bencher;
     use super::*;
