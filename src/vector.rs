@@ -53,7 +53,7 @@ impl ops::Add for Vec3 {
     type Output = Vec3;
 
     fn add(self, other: Vec3) -> Vec3 {
-        Vec3 { x: self.x + other.x, y: self.y + other.y, z: self.z * other.z }
+        Vec3 { x: self.x + other.x, y: self.y + other.y, z: self.z + other.z }
     }
 }
 
@@ -88,8 +88,30 @@ mod test {
     #[test]
     fn test_vec2_dot() {
         let v1 = Vec2::new(5.0, 2.0);
-        let v2 = Vec2::new(5.0, 2.0);
         let result = 29.0;
-        assert_eq!(v1.dot(v2), result);
+        assert_eq!(v1.dot(v1), result);
+    }
+
+    #[test]
+    fn test_vec3_add() {
+        let v1 = Vec3::new(5.0, 3.0, 2.0);
+        let v2 = Vec3::new(5.0, 2.0, 3.0);
+        let result = Vec3::new(10.0, 5.0, 5.0);
+        assert_eq!(v1 + v2, result);
+    }
+
+    #[test]
+    fn test_vec3_mul() {
+        let v1 = Vec3::new(5.0, 3.0, 2.0);
+        let t = 2.0;
+        let result = Vec3::new(10.0, 6.0, 4.0);
+        assert_eq!(v1 * t, result);
+    }
+
+    #[test]
+    fn test_vec3_dot() {
+        let v1 = Vec3::new(5.0, 2.0, 1.0);
+        let result = 30.0;
+        assert_eq!(v1.dot(v1), result);
     }
 }
