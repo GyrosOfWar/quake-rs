@@ -17,6 +17,7 @@ mod host;
 mod framebuffer;
 mod bezier;
 mod lmp;
+mod vector;
 
 fn main() {
     Host::new().run();

@@ -1,4 +1,4 @@
-use util::Vec2;
+use vector::Vec2;
 
 pub struct BezierCurve {
     start: Vec2,
@@ -28,7 +28,7 @@ impl BezierCurve {
         let mut t = 0.0;
         let step = 1.0 / num_points as f32;
         let mut pts = vec![];
-        
+
         while t <= 1.0 {
             pts.push(self.evaluate(t));
             t += step;

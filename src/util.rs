@@ -1,16 +1,16 @@
 use std::time::Duration;
 use std::ops;
 
-/// Provides some additional conversions for Duration types. 
+/// Provides some additional conversions for Duration types.
 pub trait DurationExt {
-    /// Returns the whole duration in seconds, including the nano-second 
+    /// Returns the whole duration in seconds, including the nano-second
     /// precision.
     fn seconds(&self) -> f64;
-    
-    /// Returns the whole duration in milliseconds, including 
-    /// the nano-second precision. 
+
+    /// Returns the whole duration in milliseconds, including
+    /// the nano-second precision.
     fn millis(&self) -> f64;
-    
+
     /// Creates a time from nanoseconds. (since the Duration::new function only
     // takes nanoseconds as a u32, which can easily overflow)
     fn from_nanos(nanos: u64) -> Duration;
@@ -21,12 +21,12 @@ impl DurationExt for Duration {
     fn seconds(&self) -> f64 {
         self.as_secs() as f64 + self.subsec_nanos() as f64 / 1e9
     }
-    
+
     #[inline]
     fn millis(&self) -> f64 {
         self.as_secs() as f64 * 1000.0 + (self.subsec_nanos() as f64 / 1e6)
     }
-    
+
     #[inline]
     fn from_nanos(nanos: u64) -> Duration {
         if nanos > 1_000_000_000 {
@@ -62,7 +62,7 @@ const EPSILON: f32 = 0.0001;
 
 pub fn step(start: f32, end: f32) -> F32Step {
     assert!(end >= start);
-    
+
     F32Step {
         start: start,
         end: end,
@@ -100,43 +100,11 @@ impl Iterator for F32Step {
     }
 }
 
-#[derive(Debug, Copy, Clone, PartialEq)]
-pub struct Vec2 {
-    pub x: f32,
-    pub y: f32
-}
-
-impl Vec2 {
-    pub fn new(x: f32, y: f32) -> Vec2 {
-        Vec2 { x: x, y: y }
-    }
-
-    pub fn dot(self, other: Vec2) -> f32 {
-        self.x * other.x + self.y * other.y
-    }
-}
-
-impl ops::Add for Vec2 {
-    type Output = Vec2;
-
-    fn add(self, other: Vec2) -> Vec2 {
-        Vec2 { x: self.x + other.y, y: self.y + other.y }
-    }
-}
-
-impl ops::Mul<f32> for Vec2 {
-    type Output = Vec2;
-
-    fn mul(self, t: f32) -> Vec2 {
-        Vec2 { x: self.x * t, y: self.y * t }
-    }
-}
-
 #[cfg(test)]
 mod test {
     use std::time::Duration;
     use super::DurationExt;
-    
+
     #[test]
     fn test_from_nanos() {
         // 120 seconds
@@ -145,23 +113,23 @@ mod test {
         assert_eq!(duration.as_secs(), 120);
         assert_eq!(duration.subsec_nanos(), 0);
     }
-    
+
     #[test]
     fn test_from_nanos_2() {
         let nanos: u64 = 3_000_000_000 + 64;
         let duration = Duration::from_nanos(nanos);
-        
+
         assert_eq!(duration.as_secs(), 3);
         assert_eq!(duration.subsec_nanos(), 64);
     }
-    
+
     #[test]
     fn test_to_seconds() {
         let duration = Duration::new(3, 500_000_000);
         let secs = duration.seconds();
         assert_eq!(secs, 3.5);
     }
-    
+
     #[test]
     fn test_to_millis() {
         let duration = Duration::new(0, 500_000_000);

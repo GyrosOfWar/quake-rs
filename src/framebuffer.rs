@@ -3,8 +3,9 @@ use std::io::prelude::*;
 use std::{io, f32};
 
 use bezier::BezierCurve;
-use util::{Color, Vec2, step};
+use util::{Color, step};
 use lmp::LmpImage;
+use vector::{Vec2, Vec3};
 
 const PALETTE_FILE_NAME: &'static str = "palette.lmp";
 
@@ -159,7 +160,9 @@ impl Framebuffer {
                 let s = q.dot(v2) / v1.dot(v2);
                 let t = v1.dot(q) / v1.dot(v2);
 
+                println!("Calculated s: {} and y: {}", s, t);
                 if (s >= 0.0) && (t >= 0.0) && (s + t <= 1.0) {
+                    println!("Drawing pixel with x: {} and y: {}", x.round() as usize, y.round() as usize);
                     self.set(x.round() as usize, y.round() as usize, color);
                 }
             }
@@ -181,7 +184,7 @@ impl Framebuffer {
             self.set(p.x as usize, p.y as usize, color);
         }
     }
-    
+
     pub fn draw_pic(&mut self, x_pos: usize, y_pos: usize, image: &LmpImage) {
         // Not the fastst solution, probably
         for j in 0..image.height() {

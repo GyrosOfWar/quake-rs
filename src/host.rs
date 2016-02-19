@@ -7,8 +7,9 @@ use sdl2::keyboard::Keycode;
 use timer::Timer;
 use options::Options;
 use framebuffer::Framebuffer;
-use util::{Vec2, DurationExt};
+use util::DurationExt;
 use lmp::LmpImage;
+use vector::{Vec2, Vec3};
 
 use std::{ptr, io};
 use std::io::prelude::*;
@@ -37,7 +38,7 @@ impl Host {
         let window = window_builder.build().unwrap();
         let debug = options.is_set("-debug");
         // Unlock the framerate in debug mode
-        let timer = Timer::new(debug);        
+        let timer = Timer::new(debug);
         let images = vec![LmpImage::from_file("pause.lmp").unwrap()];
 
         Host {
@@ -66,6 +67,7 @@ impl Host {
     fn draw(&mut self) {
         self.framebuffer.fill(0);
         self.framebuffer.draw_pic(100, 100, &self.images[0]);
+        self.framebuffer.triangle(Vec2::new(400.0, 400.0), Vec2::new(400.0, 200.0), Vec2::new(200.0, 400.0), 175)
     }
 
     fn swap_buffers(&mut self) {
