@@ -20,7 +20,7 @@ impl ops::Add for Vec2 {
     type Output = Vec2;
 
     fn add(self, other: Vec2) -> Vec2 {
-        Vec2 { x: self.x + other.y, y: self.y + other.y }
+        Vec2 { x: self.x + other.x, y: self.y + other.y }
     }
 }
 
@@ -62,5 +62,34 @@ impl ops::Mul<f32> for Vec3 {
 
     fn mul(self, t: f32) -> Vec3 {
         Vec3 { x: self.x * t, y: self.y * t, z: self.z * t }
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use vector::{Vec2, Vec3};
+
+    #[test]
+    fn test_vec2_add() {
+        let v1 = Vec2::new(5.0, 2.0);
+        let v2 = Vec2::new(5.0, 3.0);
+        let result = Vec2::new(10.0, 5.0);
+        assert_eq!(v1 + v2, result);
+    }
+
+    #[test]
+    fn test_vec2_mul() {
+        let v1 = Vec2::new(5.0, 2.0);
+        let t = 2.0;
+        let result = Vec2::new(10.0, 4.0);
+        assert_eq!(v1 * t, result);
+    }
+
+    #[test]
+    fn test_vec2_dot() {
+        let v1 = Vec2::new(5.0, 2.0);
+        let v2 = Vec2::new(5.0, 2.0);
+        let result = 29.0;
+        assert_eq!(v1.dot(v2), result);
     }
 }
