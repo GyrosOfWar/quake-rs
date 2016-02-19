@@ -147,10 +147,11 @@ impl Framebuffer {
 
     /// Barycentric triangle drawing
     pub fn triangle(&mut self, v1: Vec2, v2: Vec2, v3: Vec2, color: u8) {
-        let max_x = f32::max(v1.x, f32::max(v2.x, v3.x));
-        let min_x = f32::min(v1.x, f32::min(v2.x, v3.x));
-        let max_y = f32::max(v1.y, f32::max(v2.y, v3.y));
-        let min_y = f32::min(v1.y, f32::min(v2.y, v3.y));
+        // Calculate bounding box and clip against screen size
+        let max_x = f32::min(f32::max(v1.x, f32::max(v2.x, v3.x)), self.width as f32);
+        let min_x = f32::max(f32::min(v1.x, f32::min(v2.x, v3.x)), 0.0);
+        let max_y = f32::min(f32::max(v1.y, f32::max(v2.y, v3.y)), self.height as f32);
+        let min_y = f32::max(f32::min(v1.y, f32::min(v2.y, v3.y)), 0.0);
 
         let v1 = Vec2::new(v2.x - v1.x, v2.y - v1.y);
         let v2 = Vec2::new(v3.x - v1.x, v3.y - v1.y);
