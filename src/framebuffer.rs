@@ -5,7 +5,7 @@ use std::{io, f32};
 use bezier::BezierCurve;
 use util::{Color, step};
 use lmp::LmpImage;
-use vector::{Vec2, Vec3};
+use vector::Vec2;
 
 const PALETTE_FILE_NAME: &'static str = "palette.lmp";
 
