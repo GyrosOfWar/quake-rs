@@ -1,5 +1,4 @@
 use std::time::Duration;
-use std::ops;
 
 /// Provides some additional conversions for Duration types.
 pub trait DurationExt {
