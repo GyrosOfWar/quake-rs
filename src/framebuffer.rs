@@ -21,7 +21,7 @@ impl Palette {
         try!(reader.read_to_end(&mut bytes));
 
         for (i, b) in bytes.chunks(3).enumerate() {
-            let (r, g, b) = (b[0], b[1], b[2]);
+            let (r, g, b) = (b[2], b[1], b[0]);
             buf[i] = Color::new(r, g, b);
         }
 
@@ -106,23 +106,9 @@ impl Framebuffer {
     pub fn color_buffer(&self) -> &[u8] {
         &self.color_buffer
     }
-
-    /// DDA line drawing.
-    pub fn line(&mut self, x1: usize, y1: usize, x2: usize, y2: usize, color: u8) {
-        let dx = x2 as f32 - x1 as f32;
-        let dy = y2 as f32 - y1 as f32;
-        let m = dy / dx;
-        let mut y = y1 as f32;
-
-        for x in x1..x2 {
-            let iy = y.round() as usize;
-            self.set(x, iy, color);
-            y += m;
-        }
-    }
-
+    
     /// Bresenham line drawing
-    pub fn bre_line(&mut self, x0: usize, y0: usize, x1: usize, y1: usize, color: u8) {
+    pub fn line(&mut self, x0: usize, y0: usize, x1: usize, y1: usize, color: u8) {
         let dx = (x1 - x0) as i32;
         let dy = (y1 - y0) as i32;
         let mut d = 2 * dy - dx;
@@ -161,9 +147,7 @@ impl Framebuffer {
                 let s = q.dot(v2) / v1.dot(v2);
                 let t = v1.dot(q) / v1.dot(v2);
 
-                println!("Calculated s: {} and y: {}", s, t);
                 if (s >= 0.0) && (t >= 0.0) && (s + t <= 1.0) {
-                    println!("Drawing pixel with x: {} and y: {}", x.round() as usize, y.round() as usize);
                     self.set(x.round() as usize, y.round() as usize, color);
                 }
             }
@@ -193,6 +177,22 @@ impl Framebuffer {
                 let x = i as usize + x_pos;
                 let y = j as usize + y_pos;
                 self.set(x, y, image.get(i, j));
+            }
+        }
+    }
+    
+    pub fn draw_gradient(&mut self, start: u8, end: u8) {
+        assert!(end > start);
+        let w = self.width;
+        let h = self.height;
+        let s = start as f32;
+        let d = (end - start) as f32;
+        
+        for y in 0..h {
+            for x in 0..w {
+                let p = x as f32 / w as f32;
+                let c = s + p * d;
+                self.set(x, y, c as u8);
             }
         }
     }
@@ -258,22 +258,14 @@ mod tests {
 mod bench {
     use test::Bencher;
     use super::*;
-    const WIDTH: usize = 2560;
-    const HEIGHT: usize = 1440;
-
-    #[bench]
-    fn bench_dda(b: &mut Bencher) {
-        let mut fb = Framebuffer::new(WIDTH, HEIGHT);
-        b.iter(|| {
-            fb.line(0, 0, 799, 599, 12);
-        });
-    }
+    const WIDTH: usize = 800;
+    const HEIGHT: usize = 600;
 
     #[bench]
     fn bench_bresenham(b: &mut Bencher) {
         let mut fb = Framebuffer::new(WIDTH, HEIGHT);
         b.iter(|| {
-            fb.bre_line(0, 0, 799, 599, 12);
+            fb.line(0, 0, 799, 599, 12);
         });
     }
 }

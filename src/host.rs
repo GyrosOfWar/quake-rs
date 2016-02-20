@@ -39,8 +39,8 @@ impl Host {
         let debug = options.is_set("-debug");
         // Unlock the framerate in debug mode
         let timer = Timer::new(debug);
-        let images = vec![LmpImage::from_file("pause.lmp").unwrap()];
-
+        let images = vec![LmpImage::from_file("output.lmp").unwrap()];
+        
         Host {
             window: window,
             event_pump: context.event_pump().unwrap(),
@@ -66,8 +66,7 @@ impl Host {
 
     fn draw(&mut self) {
         self.framebuffer.fill(0);
-        self.framebuffer.draw_pic(100, 100, &self.images[0]);
-        self.framebuffer.triangle(Vec2::new(400.0, 400.0), Vec2::new(400.0, 200.0), Vec2::new(200.0, 400.0), 175)
+        self.framebuffer.draw_pic(0, 0, &self.images[0]);
     }
 
     fn swap_buffers(&mut self) {

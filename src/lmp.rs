@@ -1,4 +1,4 @@
-use std::io;
+use std::{io, fmt};
 use std::io::prelude::*;
 use std::path::Path;
 use std::fs::File;
@@ -16,9 +16,9 @@ impl LmpImage {
         let mut reader = io::BufReader::new(file);
         let width = try!(reader.read_u32::<LittleEndian>());
         let height = try!(reader.read_u32::<LittleEndian>());
+        println!("width = {}, height = {}", width, height);
         let mut data = vec![];
         try!(reader.read_to_end(&mut data));
-        
         Ok(LmpImage {
             width: width,
             height: height,
@@ -40,4 +40,19 @@ impl LmpImage {
     pub fn height(&self) -> u32 { self.height }
     
     pub fn pixels(&self) -> &[u8] { &self.data }
+}
+
+impl fmt::Debug for LmpImage {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        let mut s = String::new();
+        for y in 0..self.height {
+            for x in 0..self.width {
+                s.push_str(&format!("{} ", self.data[self.index(x, y)]));
+            }
+            
+            s.push('\n');
+        }
+        
+        write!(f, "{}", s)
+    }
 }
