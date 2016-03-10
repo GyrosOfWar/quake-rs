@@ -23,7 +23,7 @@ impl Timer {
     
     pub fn step(&mut self) -> Option<Duration> {
         let now = Instant::now();
-        let timestep = now.duration_from_earlier(self.last_frame);
+        let timestep = now.duration_since(self.last_frame);
         self.total = self.start.elapsed();
         if self.unlocked || timestep > self.frame_duration {
             self.last_frame = now;

@@ -3,7 +3,7 @@ use vector::Vec2;
 pub struct BezierCurve {
     start: Vec2,
     control: Vec2,
-    end: Vec2
+    end: Vec2,
 }
 
 impl BezierCurve {
@@ -11,7 +11,7 @@ impl BezierCurve {
         BezierCurve {
             start: s,
             control: c,
-            end: e
+            end: e,
         }
     }
 

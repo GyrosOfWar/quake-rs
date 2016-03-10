@@ -4,18 +4,17 @@ name = "quake-rs"
 version = "0.1.0"
 
 [dependencies]
-rand = "0.3.13"
-sdl2 = "0.14.0"
-byteorder = "0.4.2"
+rand = "*"
+sdl2 = "*"
+byteorder = "*"
 
 [dependencies.clippy]
 optional = true
-version = "0.0.37"
+version = "*"
 
 [features]
 nightly = ["clippy"]
 
 [profile]
-
 [profile.release]
 debug = true

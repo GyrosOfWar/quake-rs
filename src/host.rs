@@ -9,7 +9,6 @@ use options::Options;
 use framebuffer::Framebuffer;
 use util::DurationExt;
 use lmp::LmpImage;
-use vector::Vec2;
 
 use std::{ptr, io};
 use std::io::prelude::*;

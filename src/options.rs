@@ -28,7 +28,7 @@ impl Options {
             // Get the value occurring after that index 
             self.args.get(idx + 1).and_then(|arg| {
                 // Don't return other commandline options
-                if arg.starts_with("-") {
+                if arg.starts_with('-') {
                     None
                 } else {
                     // Try to parse the value to the desired type

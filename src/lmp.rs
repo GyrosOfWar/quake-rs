@@ -16,7 +16,6 @@ impl LmpImage {
         let mut reader = io::BufReader::new(file);
         let width = try!(reader.read_u32::<LittleEndian>());
         let height = try!(reader.read_u32::<LittleEndian>());
-        println!("width = {}, height = {}", width, height);
         let mut data = vec![];
         try!(reader.read_to_end(&mut data));
         Ok(LmpImage {
