@@ -3,7 +3,7 @@ use std::ops;
 #[derive(Debug, Copy, Clone, PartialEq)]
 pub struct Vec2 {
     pub x: f32,
-    pub y: f32
+    pub y: f32,
 }
 
 impl Vec2 {
@@ -20,7 +20,10 @@ impl ops::Add for Vec2 {
     type Output = Vec2;
 
     fn add(self, other: Vec2) -> Vec2 {
-        Vec2 { x: self.x + other.x, y: self.y + other.y }
+        Vec2 {
+            x: self.x + other.x,
+            y: self.y + other.y,
+        }
     }
 }
 
@@ -28,7 +31,10 @@ impl ops::Mul<f32> for Vec2 {
     type Output = Vec2;
 
     fn mul(self, t: f32) -> Vec2 {
-        Vec2 { x: self.x * t, y: self.y * t }
+        Vec2 {
+            x: self.x * t,
+            y: self.y * t,
+        }
     }
 }
 
@@ -36,7 +42,7 @@ impl ops::Mul<f32> for Vec2 {
 pub struct Vec3 {
     pub x: f32,
     pub y: f32,
-    pub z: f32
+    pub z: f32,
 }
 
 impl Vec3 {
@@ -53,7 +59,11 @@ impl ops::Add for Vec3 {
     type Output = Vec3;
 
     fn add(self, other: Vec3) -> Vec3 {
-        Vec3 { x: self.x + other.x, y: self.y + other.y, z: self.z + other.z }
+        Vec3 {
+            x: self.x + other.x,
+            y: self.y + other.y,
+            z: self.z + other.z,
+        }
     }
 }
 
@@ -61,13 +71,17 @@ impl ops::Mul<f32> for Vec3 {
     type Output = Vec3;
 
     fn mul(self, t: f32) -> Vec3 {
-        Vec3 { x: self.x * t, y: self.y * t, z: self.z * t }
+        Vec3 {
+            x: self.x * t,
+            y: self.y * t,
+            z: self.z * t,
+        }
     }
 }
 
 #[cfg(test)]
 mod test {
-    use vector::{Vec2, Vec3};
+    use super::{Vec2, Vec3};
 
     #[test]
     fn test_vec2_add() {

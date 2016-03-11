@@ -7,7 +7,7 @@ pub struct Timer {
     last_frame: Instant,
     total: Duration,
     frame_duration: Duration,
-    unlocked: bool
+    unlocked: bool,
 }
 
 impl Timer {
@@ -20,7 +20,7 @@ impl Timer {
             unlocked: unlocked,
         }
     }
-    
+
     pub fn step(&mut self) -> Option<Duration> {
         let now = Instant::now();
         let timestep = now.duration_since(self.last_frame);
@@ -32,8 +32,10 @@ impl Timer {
             None
         }
     }
-    
-    pub fn elapsed(&self) -> Duration { self.total }
+
+    pub fn elapsed(&self) -> Duration {
+        self.total
+    }
 }
 
 #[cfg(test)]
@@ -41,7 +43,7 @@ mod tests {
     use super::Timer;
     use std::thread;
     use std::time::Duration;
-    
+
     #[test]
     fn test_tick() {
         let mut timer = Timer::new(false);

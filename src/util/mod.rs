@@ -1,3 +1,11 @@
+pub mod options;
+pub mod timer;
+pub mod vector;
+
+pub use self::options::Options;
+pub use self::timer::Timer;
+pub use self::vector::{Vec2, Vec3};
+
 use std::time::Duration;
 
 /// Provides some additional conversions for Duration types.
@@ -43,7 +51,7 @@ pub struct Color {
     pub r: u8,
     pub g: u8,
     pub b: u8,
-    _unused: u8
+    _unused: u8,
 }
 
 impl Color {
@@ -52,7 +60,7 @@ impl Color {
             r: r,
             g: g,
             b: b,
-            _unused: 0
+            _unused: 0,
         }
     }
 }
@@ -65,7 +73,7 @@ pub fn step(start: f32, end: f32) -> F32Step {
     F32Step {
         start: start,
         end: end,
-        current: start
+        current: start,
     }
 }
 
@@ -76,7 +84,7 @@ fn almost_eq(a: f32, b: f32) -> bool {
 pub struct F32Step {
     start: f32,
     end: f32,
-    current: f32
+    current: f32,
 }
 
 impl Iterator for F32Step {

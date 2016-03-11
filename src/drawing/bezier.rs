@@ -1,4 +1,5 @@
-use vector::Vec2;
+use util::vector::Vec2;
+// use vector::Vec2;
 
 pub struct BezierCurve {
     start: Vec2,

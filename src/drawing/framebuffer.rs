@@ -1,25 +1,17 @@
-use std::fs::File;
-use std::io::prelude::*;
 use std::{io, f32};
 
-use bezier::BezierCurve;
-use util::{Color, step};
-use lmp::LmpImage;
-use vector::Vec2;
-
-const PALETTE_FILE_NAME: &'static str = "palette.lmp";
+use drawing::bezier::BezierCurve;
+use util::{Color, step, Vec2};
+use files::*;
 
 pub struct Palette {
     colors: [Color; 256]
 }
 
 impl Palette {
-    pub fn new() -> io::Result<Palette>  {
+    pub fn new(pack: &mut PackContainer) -> PackResult<Palette> {
+        let bytes = try!(pack.read("PAK0.PAK", "gfx/palette.lmp"));
         let mut buf = [Color::default(); 256];
-        let mut reader = io::BufReader::new(try!(File::open(PALETTE_FILE_NAME)));
-        let mut bytes = vec![];
-        try!(reader.read_to_end(&mut bytes));
-
         for (i, b) in bytes.chunks(3).enumerate() {
             let (r, g, b) = (b[2], b[1], b[0]);
             buf[i] = Color::new(r, g, b);
@@ -48,13 +40,13 @@ pub struct Framebuffer {
 }
 
 impl Framebuffer {
-    pub fn new(width: usize, height: usize) -> Framebuffer {
+    pub fn new(width: usize, height: usize, pack: &mut PackContainer) -> Framebuffer {
         Framebuffer {
             pixels: vec![0; height * width],
             width: width as usize,
             height: height as usize,
             color_buffer: vec![0; height * width * 4],
-            palette: Palette::new().unwrap()
+            palette: Palette::new(pack).unwrap()
         }
     }
 
@@ -201,13 +193,15 @@ impl Framebuffer {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use files::*;
 
     #[test]
     fn create_framebuffer() {
         let h = 20;
         let w = 16;
-
-        let mut fb = Framebuffer::new(w, h);
+        let mut pc = PackContainer::new();
+        pc.read_pack("Id1/PAK0.PAK").unwrap();
+        let mut fb = Framebuffer::new(w, h, &mut pc);
         for i in 0..w {
             for j in 0..h {
                 fb.set(i, j, 20);
@@ -222,8 +216,9 @@ mod tests {
         let w = 200;
         let sz = w * w * 4;
         let palette_index = 4;
-
-        let mut fb = Framebuffer::new(w, w);
+        let mut pc = PackContainer::new();
+        pc.read_pack("Id1/PAK0.PAK").unwrap();
+        let mut fb = Framebuffer::new(w, w, &mut pc);
         fb.fill(palette_index);
         let p = fb.palette.get(palette_index);
         fb.swap_buffers();
@@ -239,8 +234,10 @@ mod tests {
     #[test]
     fn test_set() {
         let w = 20;
-        let h = 16;
-        let mut fb = Framebuffer::new(w, h);
+        let h = 16;        
+        let mut pc = PackContainer::new();
+        pc.read_pack("Id1/PAK0.PAK").unwrap();
+        let mut fb = Framebuffer::new(w, h, &mut pc);
 
         for y in 0..h {
             for x in 0..w {
@@ -258,12 +255,16 @@ mod tests {
 mod bench {
     use test::Bencher;
     use super::*;
+    use files::*;
+    
     const WIDTH: usize = 800;
     const HEIGHT: usize = 600;
 
     #[bench]
     fn bench_bresenham(b: &mut Bencher) {
-        let mut fb = Framebuffer::new(WIDTH, HEIGHT);
+        let mut pc = PackContainer::new();
+        pc.read_pack("Id1/PAK0.PAK").unwrap();
+        let mut fb = Framebuffer::new(WIDTH, HEIGHT, &mut pc);
         b.iter(|| {
             fb.line(0, 0, 799, 599, 12);
         });

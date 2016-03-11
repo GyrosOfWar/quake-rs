@@ -7,25 +7,27 @@ use std::str::FromStr;
 /// existence of boolean parameters (like "-windowed").
 #[derive(Debug)]
 pub struct Options {
-    args: Vec<String>
+    args: Vec<String>,
 }
 
 impl Options {
     pub fn new() -> Options {
         Options { args: env::args().collect() }
     }
-    
+
     pub fn with_args(args: Vec<String>) -> Options {
         Options { args: args }
     }
-    
+
     /// Return the parameter of the given argument. Returns None if the argument 
     /// is either not found, couldn't be parsed to the desired type or the next 
     /// argument is itself a commandline option (starts with '-').
-    pub fn check_param<T>(&self, argument: &str) -> Option<T> where T: FromStr {  
+    pub fn check_param<T>(&self, argument: &str) -> Option<T>
+        where T: FromStr
+    {
         // Find the index of the argument in the argument list
         self.args.iter().position(|s| s == argument).and_then(|idx| {
-            // Get the value occurring after that index 
+            // Get the value occurring after that index
             self.args.get(idx + 1).and_then(|arg| {
                 // Don't return other commandline options
                 if arg.starts_with('-') {
@@ -37,7 +39,7 @@ impl Options {
             })
         })
     }
-    
+
     /// Checks if the given parameter is set.
     pub fn is_set(&self, param: &str) -> bool {
         for s in &self.args {
@@ -45,7 +47,7 @@ impl Options {
                 return true;
             }
         }
-        
+
         false
     }
 }
@@ -60,5 +62,5 @@ mod tests {
         assert_eq!(windowed, true);
         let alpha: Option<u32> = options.check_param("-alpha");
         assert_eq!(alpha, Some(50));
-    }   
+    }
 }
