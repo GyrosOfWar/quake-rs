@@ -5,7 +5,7 @@ use std::str::FromStr;
 /// the command line arguments and provides methods to find 
 /// parameters with arguments (e.g. "-alpha 50") and check the 
 /// existence of boolean parameters (like "-windowed").
-#[derive(Debug)]
+#[derive(Debug, Default)]
 pub struct Options {
     args: Vec<String>,
 }

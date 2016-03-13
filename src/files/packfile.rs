@@ -129,6 +129,7 @@ impl Pack {
     }
 }
 
+#[derive(Default, Debug)]
 pub struct PackContainer {
     files: Vec<Pack>,
     file_mgr: FileManager,
@@ -156,7 +157,7 @@ impl PackContainer {
             Some(p) => {
                 p.read_file(filename, &mut self.file_mgr)
             },
-            None => return Err(PackError::UnknownPakFileName)
+            None => Err(PackError::UnknownPakFileName)
         }
     }
     
@@ -172,13 +173,15 @@ impl PackContainer {
 #[cfg(test)]
 mod test {
     use std::io;
-    use files::{FileManager, FileHandle};
-    use super::{PackContainer, Header, Pack, PackFile, PackResult};
+    use files::FileManager;
+    use super::{Header, Pack, PackFile, PackContainer};
 
+    const PAK0: &'static str = "Id1/PAK0.PAK";
+    
     #[test]
     fn read_header() {
         let mut file_mgr = FileManager::new();
-        file_mgr.open_read("Id1/PAK0.PAK").unwrap();
+        file_mgr.open_read(PAK0).unwrap();
         let header = Header::read(&mut file_mgr, 0).unwrap();
         assert_eq!(header.directory_length, 21696);
         assert_eq!(header.directory_offset, 18254423);
@@ -187,7 +190,7 @@ mod test {
     #[test]
     fn read_packfile() {
         let mut file_mgr = FileManager::new();
-        file_mgr.open_read("Id1/PAK0.PAK").unwrap();
+        file_mgr.open_read(PAK0).unwrap();
         let header = Header::read(&mut file_mgr, 0).unwrap();
         file_mgr.seek(0, io::SeekFrom::Start(header.directory_offset as u64)).unwrap();
         let packfile = PackFile::read(&mut file_mgr, 0).unwrap();
@@ -197,7 +200,7 @@ mod test {
     #[test]
     fn read_whole_pack() {
         let mut file_mgr = FileManager::new();
-        file_mgr.open_read("Id1/PAK0.PAK").unwrap();
+        file_mgr.open_read(PAK0).unwrap();
         
         let pak0 = Pack::open(&mut file_mgr, 0, "PAK0.PAK".into()).unwrap();
         assert_eq!(pak0.files.len(), 339);
@@ -206,12 +209,29 @@ mod test {
     #[test]
     fn read_file_from_pack() {
         let mut file_mgr = FileManager::new();
-        let h = file_mgr.open_read("Id1/PAK0.PAK").unwrap();
+        let h = file_mgr.open_read(PAK0).unwrap();
         
-        let mut pak0 = Pack::open(&mut file_mgr, h, "PAK0.PAK".into()).unwrap();
+        let pak0 = Pack::open(&mut file_mgr, h, "PAK0.PAK".into()).unwrap();
         let file = pak0.read_file("gfx/palette.lmp", &mut file_mgr).unwrap();
         assert_eq!(file[0], 0);
         assert_eq!(file[1], 0);
         assert_eq!(file[2], 0);
+        assert_eq!(file[3], 15);
+        assert_eq!(file[4], 15);
+        assert_eq!(file[5], 15);
+    }
+
+    #[test]
+    fn pack_container() {
+        let mut pc = PackContainer::new();
+        pc.read_pack("Id1/PAK0.PAK").unwrap();
+        let file = pc.read("PAK0.PAK", "gfx/palette.lmp").unwrap(); 
+        assert_eq!(file[0], 0);
+        assert_eq!(file[1], 0);
+        assert_eq!(file[2], 0);       
+        assert_eq!(file[3], 15);
+        assert_eq!(file[4], 15);
+        assert_eq!(file[5], 15);
+
     }
 }

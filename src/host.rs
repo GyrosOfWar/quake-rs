@@ -24,6 +24,12 @@ pub struct Host {
     paks: PackContainer,
 }
 
+impl Default for Host {
+    fn default() -> Host {
+        Host::new()
+    }
+}
+
 impl Host {
     pub fn new() -> Host {
         let options = Options::new();

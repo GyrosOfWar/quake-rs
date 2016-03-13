@@ -1,4 +1,4 @@
-use std::{io, f32};
+use std::f32;
 
 use drawing::bezier::BezierCurve;
 use util::{Color, step, Vec2};
