@@ -8,6 +8,10 @@ pub use self::vector::{Vec2, Vec3};
 
 use std::time::Duration;
 
+#[allow(unused_variables)]
+pub fn ignore<T>(value: T) {
+}
+
 /// Provides some additional conversions for Duration types.
 pub trait DurationExt {
     /// Returns the whole duration in seconds, including the nano-second

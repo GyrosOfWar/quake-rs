@@ -5,21 +5,19 @@ use util::{Color, step, Vec2};
 use files::*;
 
 pub struct Palette {
-    colors: [Color; 256]
+    colors: [Color; 256],
 }
 
 impl Palette {
     pub fn new(pack: &mut PackContainer) -> PackResult<Palette> {
-        let bytes = try!(pack.read("PAK0.PAK", "gfx/palette.lmp"));
+        let bytes = try!(pack.read("gfx/palette.lmp"));
         let mut buf = [Color::default(); 256];
         for (i, b) in bytes.chunks(3).enumerate() {
             let (r, g, b) = (b[2], b[1], b[0]);
             buf[i] = Color::new(r, g, b);
         }
 
-        Ok(Palette {
-            colors: buf
-        })
+        Ok(Palette { colors: buf })
     }
 
     pub fn get(&self, c: u8) -> Color {
@@ -36,7 +34,7 @@ pub struct Framebuffer {
     /// Buffer of colors as they will be rendered to the screen.
     /// Size is width * height * 4 (32 bpp), also treated like a fixed-size array.
     color_buffer: Vec<u8>,
-    pub palette: Palette
+    pub palette: Palette,
 }
 
 impl Framebuffer {
@@ -46,7 +44,7 @@ impl Framebuffer {
             width: width as usize,
             height: height as usize,
             color_buffer: vec![0; height * width * 4],
-            palette: Palette::new(pack).unwrap()
+            palette: Palette::new(pack).unwrap(),
         }
     }
 
@@ -72,9 +70,13 @@ impl Framebuffer {
         }
     }
 
-    pub fn width(&self) -> usize { self.width }
+    pub fn width(&self) -> usize {
+        self.width
+    }
 
-    pub fn height(&self) -> usize { self.height }
+    pub fn height(&self) -> usize {
+        self.height
+    }
 
     /// Copies the values currently in the `pixels` array to the
     /// color buffer and translates them through the palette.
@@ -82,10 +84,10 @@ impl Framebuffer {
         let mut i = 0;
         for px in &self.pixels {
             let color = self.palette.get(*px);
-            self.color_buffer[i  ] = color.r;
-            self.color_buffer[i+1] = color.g;
-            self.color_buffer[i+2] = color.b;
-            self.color_buffer[i+3] = 0;
+            self.color_buffer[i] = color.r;
+            self.color_buffer[i + 1] = color.g;
+            self.color_buffer[i + 2] = color.b;
+            self.color_buffer[i + 3] = 0;
 
             i += 4;
         }
@@ -98,7 +100,7 @@ impl Framebuffer {
     pub fn color_buffer(&self) -> &[u8] {
         &self.color_buffer
     }
-    
+
     /// Bresenham line drawing
     pub fn line(&mut self, x0: usize, y0: usize, x1: usize, y1: usize, color: u8) {
         let dx = (x1 - x0) as i32;
@@ -113,7 +115,7 @@ impl Framebuffer {
             d -= 2 * dx;
         }
 
-        for x in x0+1..x1  {
+        for x in x0 + 1..x1 {
             self.set(x, y, color);
             d = d + (2 * dy);
             if d > 0 {
@@ -172,14 +174,14 @@ impl Framebuffer {
             }
         }
     }
-    
+
     pub fn draw_gradient(&mut self, start: u8, end: u8) {
         assert!(end > start);
         let w = self.width;
         let h = self.height;
         let s = start as f32;
         let d = (end - start) as f32;
-        
+
         for y in 0..h {
             for x in 0..w {
                 let p = x as f32 / w as f32;
@@ -208,7 +210,7 @@ mod tests {
             }
         }
 
-        assert_eq!(fb.get(w-1, h-1), 20);
+        assert_eq!(fb.get(w - 1, h - 1), 20);
     }
 
     #[test]
@@ -234,7 +236,7 @@ mod tests {
     #[test]
     fn test_set() {
         let w = 20;
-        let h = 16;        
+        let h = 16;
         let mut pc = PackContainer::new();
         pc.read_pack("Id1/PAK0.PAK").unwrap();
         let mut fb = Framebuffer::new(w, h, &mut pc);
@@ -256,7 +258,7 @@ mod bench {
     use test::Bencher;
     use super::*;
     use files::*;
-    
+
     const WIDTH: usize = 800;
     const HEIGHT: usize = 600;
 

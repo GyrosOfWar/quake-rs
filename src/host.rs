@@ -43,8 +43,7 @@ impl Host {
         // Unlock the framerate in debug mode
         let timer = Timer::new(debug);
         let mut paks = PackContainer::new();
-        paks.read_pack("Id1/PAK0.PAK").unwrap();
-        paks.read_pack("Id1/PAK1.PAK").unwrap();
+        paks.add_game_directory("Id1").unwrap();
 
         Host {
             window: window,
