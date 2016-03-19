@@ -1,29 +1,24 @@
 use std::{io, fmt};
 use std::io::prelude::*;
-use std::path::Path;
-use std::fs::File;
 use byteorder::{LittleEndian, ReadBytesExt};
 
-pub struct LmpImage {
+pub struct LmpImage<'a> {
     width: u32,
     height: u32,
-    data: Vec<u8>,
+    data: &'a [u8],
 }
 
-impl LmpImage {
-    pub fn from_file<P>(path: P) -> io::Result<LmpImage>
-        where P: AsRef<Path>
-    {
-        let file = try!(File::open(path));
-        let mut reader = io::BufReader::new(file);
-        let width = try!(reader.read_u32::<LittleEndian>());
-        let height = try!(reader.read_u32::<LittleEndian>());
-        let mut data = vec![];
-        try!(reader.read_to_end(&mut data));
+impl<'a> LmpImage<'a> {
+    pub fn from_bytes(data: &'a [u8]) -> io::Result<LmpImage<'a>> {
+        let mut cursor = io::Cursor::new(data);
+        let width = try!(cursor.read_u32::<LittleEndian>());
+        let height = try!(cursor.read_u32::<LittleEndian>());
+        let bytes = &cursor.get_ref()[8..];
+
         Ok(LmpImage {
             width: width,
             height: height,
-            data: data,
+            data: bytes,
         })
     }
 
@@ -49,7 +44,7 @@ impl LmpImage {
     }
 }
 
-impl fmt::Debug for LmpImage {
+impl<'a> fmt::Debug for LmpImage<'a> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         let mut s = String::new();
         for y in 0..self.height {

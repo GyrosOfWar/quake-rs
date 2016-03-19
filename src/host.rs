@@ -22,6 +22,7 @@ pub struct Host {
     options: Options,
     debug: bool,
     paks: PackContainer,
+    image_bytes: Vec<u8>
 }
 
 impl Default for Host {
@@ -44,6 +45,7 @@ impl Host {
         let timer = Timer::new(debug);
         let mut paks = PackContainer::new();
         paks.add_game_directory("Id1").unwrap();
+        let image = paks.read("gfx/pause.lmp").unwrap();
 
         Host {
             window: window,
@@ -53,6 +55,7 @@ impl Host {
             options: options,
             debug: debug,
             paks: paks,
+            image_bytes: image
         }
     }
 
@@ -70,7 +73,8 @@ impl Host {
 
     fn draw(&mut self) {
         self.framebuffer.fill(0);
-        // self.framebuffer.draw_pic(0, 0, &self.images[0]);
+        let img = LmpImage::from_bytes(&self.image_bytes).unwrap();
+        self.framebuffer.draw_pic(0, 0, &img);
     }
 
     fn swap_buffers(&mut self) {
