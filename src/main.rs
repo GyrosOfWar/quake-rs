@@ -1,7 +1,7 @@
 #![allow(dead_code)]
 #![cfg_attr(feature="nightly", feature(plugin))]
 #![cfg_attr(feature="nightly", plugin(clippy))]
-#![feature(test, copy_from_slice)]
+#![feature(test)]
 
 extern crate sdl2;
 extern crate rand;

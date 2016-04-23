@@ -266,7 +266,7 @@ mod test {
     fn pack_container() {
         let mut pc = PackContainer::new();
         pc.read_pack("Id1/PAK0.PAK").unwrap();
-        let file = pc.read("PAK0.PAK", "gfx/palette.lmp").unwrap();
+        let file = pc.read("gfx/palette.lmp").unwrap();
         assert_eq!(file[0], 0);
         assert_eq!(file[1], 0);
         assert_eq!(file[2], 0);
