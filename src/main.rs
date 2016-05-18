@@ -1,10 +1,10 @@
 #![allow(dead_code)]
-#![cfg_attr(feature="nightly", feature(plugin))]
+#![cfg_attr(feature="nightly", feature(plugin, test))]
 #![cfg_attr(feature="nightly", plugin(clippy))]
-#![feature(test)]
 
 extern crate sdl2;
 extern crate rand;
+#[cfg(feature="nightly")]
 extern crate test;
 extern crate byteorder;
 

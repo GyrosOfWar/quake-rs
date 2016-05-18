@@ -8,7 +8,7 @@ use util::{Timer, Options, DurationExt};
 use drawing::Framebuffer;
 use files::*;
 
-use std::io;
+use std::{io, ptr};
 use std::io::prelude::*;
 
 const DEFAULT_WIDTH: u32 = 800;
@@ -77,13 +77,28 @@ impl Host {
         self.framebuffer.draw_pic(0, 0, &img);
     }
 
+    #[cfg(feature="nightly")]
     fn swap_buffers(&mut self) {
         self.framebuffer.swap_buffers();
         {
             let mut surface = self.window.surface_mut(&self.event_pump).unwrap();
             let mut pixels = surface.without_lock_mut().unwrap();
-            let bytes = self.framebuffer.color_buffer();;
+            let bytes = self.framebuffer.color_buffer();
             pixels.copy_from_slice(bytes);
+        }
+        self.window.update_surface().unwrap();
+    }
+    
+    #[cfg(not(feature="nightly"))]
+    fn swap_buffers(&mut self) {
+        self.framebuffer.swap_buffers();
+        {
+            let mut surface = self.window.surface_mut(&self.event_pump).unwrap();
+            let mut pixels = surface.without_lock_mut().unwrap();
+            let bytes = self.framebuffer.color_buffer();
+            let src = bytes.as_ptr();
+            let dest = pixels.as_mut_ptr();
+            unsafe { ptr::copy_nonoverlapping(src, dest, bytes.len()); }
         }
         self.window.update_surface().unwrap();
     }

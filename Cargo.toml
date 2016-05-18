@@ -7,6 +7,7 @@ version = "0.1.0"
 rand = "*"
 sdl2 = "*"
 byteorder = "*"
+hprof = "*"
 
 [dependencies.clippy]
 optional = true
