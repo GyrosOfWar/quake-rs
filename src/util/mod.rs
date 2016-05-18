@@ -69,48 +69,6 @@ impl Color {
     }
 }
 
-const EPSILON: f32 = 0.0001;
-
-pub fn step(start: f32, end: f32) -> F32Step {
-    assert!(end >= start);
-
-    F32Step {
-        start: start,
-        end: end,
-        current: start,
-    }
-}
-
-fn almost_eq(a: f32, b: f32) -> bool {
-    (a - b).abs() < EPSILON
-}
-
-pub struct F32Step {
-    start: f32,
-    end: f32,
-    current: f32,
-}
-
-impl Iterator for F32Step {
-    type Item = f32;
-
-    fn next(&mut self) -> Option<f32> {
-        if almost_eq(self.current, self.end) {
-            None
-        } else {
-            let c = self.current;
-            self.current += 1.0;
-            Some(c)
-        }
-    }
-
-    fn size_hint(&self) -> (usize, Option<usize>) {
-        let d = (self.end - self.start) as usize;
-
-        (d, Some(d))
-    }
-}
-
 #[cfg(test)]
 mod test {
     use std::time::Duration;

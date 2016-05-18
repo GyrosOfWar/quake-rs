@@ -273,6 +273,18 @@ mod test {
         assert_eq!(file[3], 15);
         assert_eq!(file[4], 15);
         assert_eq!(file[5], 15);
-
+    }
+    
+    #[test]
+    fn game_directory() {
+        let mut pc = PackContainer::new();
+        pc.add_game_directory("Id1").unwrap();
+        let file = pc.read("gfx/palette.lmp").unwrap();
+        assert_eq!(file[0], 0);
+        assert_eq!(file[1], 0);
+        assert_eq!(file[2], 0);
+        assert_eq!(file[3], 15);
+        assert_eq!(file[4], 15);
+        assert_eq!(file[5], 15);
     }
 }

@@ -1,6 +1,6 @@
 use std::{io, fmt};
-use std::io::prelude::*;
 use byteorder::{LittleEndian, ReadBytesExt};
+use hprof;
 
 pub struct LmpImage<'a> {
     width: u32,
@@ -10,6 +10,7 @@ pub struct LmpImage<'a> {
 
 impl<'a> LmpImage<'a> {
     pub fn from_bytes(data: &'a [u8]) -> io::Result<LmpImage<'a>> {
+        hprof::enter("LmpImage::from_bytes");
         let mut cursor = io::Cursor::new(data);
         let width = try!(cursor.read_u32::<LittleEndian>());
         let height = try!(cursor.read_u32::<LittleEndian>());
@@ -40,7 +41,7 @@ impl<'a> LmpImage<'a> {
     }
 
     pub fn pixels(&self) -> &[u8] {
-        &self.data
+        self.data
     }
 }
 

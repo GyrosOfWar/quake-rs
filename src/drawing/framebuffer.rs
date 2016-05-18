@@ -1,8 +1,7 @@
-use std::f32;
-
 use drawing::bezier::BezierCurve;
-use util::{Color, step, Vec2};
+use util::Color;
 use files::*;
+use hprof;
 
 pub struct Palette {
     colors: [Color; 256],
@@ -81,6 +80,7 @@ impl Framebuffer {
     /// Copies the values currently in the `pixels` array to the
     /// color buffer and translates them through the palette.
     pub fn swap_buffers(&mut self) {
+        hprof::enter("Framebuffer::swap_buffers");
         let mut i = 0;
         for px in &self.pixels {
             let color = self.palette.get(*px);
@@ -117,33 +117,10 @@ impl Framebuffer {
 
         for x in x0 + 1..x1 {
             self.set(x, y, color);
-            d = d + (2 * dy);
+            d += 2 * dy;
             if d > 0 {
                 y += 1;
                 d -= 2 * dx;
-            }
-        }
-    }
-
-    /// Barycentric triangle drawing
-    pub fn triangle(&mut self, v1: Vec2, v2: Vec2, v3: Vec2, color: u8) {
-        // Calculate bounding box and clip against screen size
-        let max_x = f32::min(f32::max(v1.x, f32::max(v2.x, v3.x)), self.width as f32);
-        let min_x = f32::max(f32::min(v1.x, f32::min(v2.x, v3.x)), 0.0);
-        let max_y = f32::min(f32::max(v1.y, f32::max(v2.y, v3.y)), self.height as f32);
-        let min_y = f32::max(f32::min(v1.y, f32::min(v2.y, v3.y)), 0.0);
-
-        let v1 = Vec2::new(v2.x - v1.x, v2.y - v1.y);
-        let v2 = Vec2::new(v3.x - v1.x, v3.y - v1.y);
-        for x in step(min_x, max_x) {
-            for y in step(min_y, max_y) {
-                let q = Vec2::new(x - v1.x, y - v1.y);
-                let s = q.dot(v2) / v1.dot(v2);
-                let t = v1.dot(q) / v1.dot(v2);
-
-                if (s >= 0.0) && (t >= 0.0) && (s + t <= 1.0) {
-                    self.set(x.round() as usize, y.round() as usize, color);
-                }
             }
         }
     }

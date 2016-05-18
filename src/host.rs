@@ -11,6 +11,8 @@ use files::*;
 use std::{io, ptr};
 use std::io::prelude::*;
 
+use hprof;
+
 const DEFAULT_WIDTH: u32 = 800;
 const DEFAULT_HEIGHT: u32 = 600;
 
@@ -22,7 +24,7 @@ pub struct Host {
     options: Options,
     debug: bool,
     paks: PackContainer,
-    image_bytes: Vec<u8>
+    image_bytes: Vec<u8>,
 }
 
 impl Default for Host {
@@ -55,7 +57,7 @@ impl Host {
             options: options,
             debug: debug,
             paks: paks,
-            image_bytes: image
+            image_bytes: image,
         }
     }
 
@@ -72,6 +74,7 @@ impl Host {
     }
 
     fn draw(&mut self) {
+        hprof::enter("Host::draw()");
         self.framebuffer.fill(0);
         let img = LmpImage::from_bytes(&self.image_bytes).unwrap();
         self.framebuffer.draw_pic(0, 0, &img);
@@ -79,6 +82,7 @@ impl Host {
 
     #[cfg(feature="nightly")]
     fn swap_buffers(&mut self) {
+        hprof::enter("Host::swap_buffers()");
         self.framebuffer.swap_buffers();
         {
             let mut surface = self.window.surface_mut(&self.event_pump).unwrap();
@@ -88,9 +92,10 @@ impl Host {
         }
         self.window.update_surface().unwrap();
     }
-    
+
     #[cfg(not(feature="nightly"))]
     fn swap_buffers(&mut self) {
+        hprof::enter("Host::swap_buffers()");
         self.framebuffer.swap_buffers();
         {
             let mut surface = self.window.surface_mut(&self.event_pump).unwrap();
@@ -98,7 +103,9 @@ impl Host {
             let bytes = self.framebuffer.color_buffer();
             let src = bytes.as_ptr();
             let dest = pixels.as_mut_ptr();
-            unsafe { ptr::copy_nonoverlapping(src, dest, bytes.len()); }
+            unsafe {
+                ptr::copy_nonoverlapping(src, dest, bytes.len());
+            }
         }
         self.window.update_surface().unwrap();
     }
@@ -110,14 +117,17 @@ impl Host {
             println!("");
         }
         'main: loop {
+            let h = hprof::enter("Event loop");
             for event in self.event_pump.poll_iter() {
                 match event {
-                    Event::Quit {..} | Event::KeyDown { keycode: Some(Keycode::Escape), .. } => {
+                    Event::Quit { .. } |
+                    Event::KeyDown { keycode: Some(Keycode::Escape), .. } => {
                         break 'main;
                     }
                     _ => {}
                 }
             }
+            drop(h);
             self.frame(&mut lock);
         }
         if self.debug {

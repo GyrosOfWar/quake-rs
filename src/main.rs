@@ -4,9 +4,11 @@
 
 extern crate sdl2;
 extern crate rand;
+extern crate byteorder;
+extern crate hprof;
+
 #[cfg(feature="nightly")]
 extern crate test;
-extern crate byteorder;
 
 use host::Host;
 
@@ -16,5 +18,7 @@ mod util;
 mod host;
 
 fn main() {
+    hprof::start_frame();
     Host::new().run();
+    hprof::profiler().print_timing();
 }
