@@ -18,7 +18,5 @@ mod util;
 mod host;
 
 fn main() {
-    hprof::start_frame();
     Host::new().run();
-    hprof::profiler().print_timing();
 }

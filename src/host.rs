@@ -63,6 +63,7 @@ impl Host {
 
     fn frame(&mut self, stdout: &mut io::StdoutLock) {
         if let Some(timestep) = self.timer.step() {
+            hprof::start_frame();
             if self.debug {
                 let fps = (1.0 / timestep.seconds()).round();
                 write!(stdout, "\r{} FPS", fps).unwrap();
@@ -70,6 +71,10 @@ impl Host {
 
             self.draw();
             self.swap_buffers();
+            hprof::end_frame();
+            if self.debug {
+                hprof::profiler().print_timing();
+            }
         }
     }
 
