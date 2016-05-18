@@ -253,7 +253,7 @@ mod tests {
     }
 }
 
-#[cfg(test)]
+#[cfg(feature="nighty")]
 mod bench {
     use test::Bencher;
     use super::*;
